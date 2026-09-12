@@ -519,6 +519,271 @@ button{cursor:pointer}
   }
 }
 
+
+/* ===== FINAL MOBILE LAYOUT ===== */
+@media(max-width:680px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden}
+  body{font-size:14px}
+  .app{padding:10px 10px 20px!important;max-width:100%!important}
+
+  .header{
+    display:block!important;
+    margin-bottom:12px!important;
+  }
+  .brand{display:flex;justify-content:center;margin-bottom:8px}
+  .brand img{width:190px!important}
+  .hero h1{font-size:22px!important;line-height:1.25!important}
+  .hero p{display:none!important}
+  .livebox{
+    justify-content:center!important;
+    margin-top:10px!important;
+    flex-wrap:wrap!important;
+  }
+  .live{font-size:11px!important;padding:7px 10px!important}
+  .updated{font-size:9.5px!important;text-align:center!important;width:100%}
+  .refresh{padding:8px 10px!important;font-size:11px!important}
+
+  .filters{
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+    margin-bottom:10px!important;
+  }
+  .select-wrap:first-child{grid-column:1/-1}
+  .select-wrap select{
+    height:44px!important;
+    border-radius:14px!important;
+    font-size:12px!important;
+    padding-left:12px!important;
+  }
+
+  .kpis{
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+    margin-bottom:10px!important;
+  }
+  .kpi{
+    min-height:86px!important;
+    padding:12px!important;
+    gap:9px!important;
+    border-radius:14px!important;
+  }
+  .kpi.primary{grid-column:1/-1}
+  .kpi .ico{width:42px!important;height:42px!important;border-radius:12px!important}
+  .kpi small{font-size:10.5px!important}
+  .kpi b{font-size:22px!important}
+  .kpi.primary b{font-size:28px!important}
+  .kpi .sub{font-size:8.5px!important}
+
+  .inst-strip{
+    overflow-x:auto!important;
+    justify-content:flex-start!important;
+    gap:10px!important;
+    padding:8px 10px!important;
+    margin-bottom:10px!important;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .inst-strip::-webkit-scrollbar{display:none}
+  .inst-strip-item{min-width:64px!important}
+  .inst-strip-item img{width:28px!important;height:28px!important}
+  .inst-strip-item span{font-size:8px!important}
+
+  .layout{grid-template-columns:1fr!important;gap:10px!important}
+  .main-panel,.side-panel{padding:14px 12px!important}
+  .panel-head{display:block!important;margin-bottom:10px!important}
+  .panel-head h2,.side-title{
+    font-size:20px!important;
+    line-height:1.3!important;
+  }
+
+  .legend{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:7px 8px!important;
+    justify-content:stretch!important;
+    padding-top:8px!important;
+  }
+  .legend span{font-size:10px!important}
+
+  .task-grid{grid-template-columns:1fr!important;gap:9px!important}
+  .task-card{
+    min-height:auto!important;
+    padding:13px 12px!important;
+    border-radius:14px!important;
+  }
+  .task-head{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+    margin-bottom:10px!important;
+  }
+  .task-title{
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr)!important;
+    gap:8px!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+  .task-code{font-size:18px!important}
+  .task-name{
+    font-size:12.5px!important;
+    white-space:normal!important;
+    max-width:none!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    line-height:1.35!important;
+  }
+  .univ-chip{
+    justify-self:start!important;
+    max-width:100%!important;
+  }
+
+  .metric{
+    grid-template-columns:50px minmax(0,1fr) 55px!important;
+    gap:7px!important;
+    margin:8px 0!important;
+  }
+  .metric-label{font-size:11px!important}
+  .metric-val{font-size:11px!important;width:55px!important;text-align:right!important}
+  .track{height:9px!important}
+
+  .side{grid-template-columns:1fr!important}
+  .donut{width:180px!important;height:180px!important}
+  .donut::after{width:104px!important;height:104px!important}
+
+  /* TOP6 card list */
+  .top-item{
+    grid-template-columns:46px minmax(0,1fr) 58px!important;
+    gap:8px!important;
+    padding:12px 0!important;
+  }
+  .top-code{font-size:15px!important}
+  .top-name{font-size:12px!important;white-space:normal!important}
+  .top-meta{font-size:9.5px!important}
+  .top-rate{font-size:13px!important}
+
+  /* Follow-up section */
+  .action-panel{padding:14px 12px!important;overflow:hidden!important}
+  .action-head{display:block!important}
+  .action-head h2{
+    font-size:21px!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:8px!important;
+    flex-wrap:wrap!important;
+    line-height:1.25!important;
+  }
+  .action-head p{
+    font-size:11px!important;
+    line-height:1.5!important;
+    word-break:keep-all!important;
+  }
+  .action-summary{
+    white-space:normal!important;
+    text-align:left!important;
+    margin-top:8px!important;
+    font-size:10.5px!important;
+  }
+
+  .top10-wrap{display:block!important;padding:10px!important}
+  .top10-title{margin-bottom:8px!important}
+  .top10-list{
+    overflow-x:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    scrollbar-width:none!important;
+  }
+  .top10-list::-webkit-scrollbar{display:none!important}
+
+  .action-table-wrap{overflow:visible!important;border:0!important}
+  .action-table{
+    min-width:0!important;
+    width:100%!important;
+    border-collapse:separate!important;
+    border-spacing:0 10px!important;
+  }
+  .action-table thead{display:none!important}
+  .action-table tbody{display:block!important}
+  .action-table tr{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:7px 9px!important;
+    width:100%!important;
+    padding:12px!important;
+    border:1px solid #E2E8EE!important;
+    border-radius:14px!important;
+    background:#fff!important;
+  }
+  .action-table td{
+    display:block!important;
+    border:0!important;
+    padding:0!important;
+    min-width:0!important;
+    font-size:11px!important;
+  }
+  .action-table td:nth-child(1){
+    grid-column:1/2!important;
+    font-size:17px!important;
+    font-weight:800!important;
+    color:var(--navy)!important;
+  }
+  .action-table td:nth-child(2){
+    grid-column:2/3!important;
+    justify-self:end!important;
+  }
+  .action-table td:nth-child(3){
+    grid-column:1/2!important;
+    color:#65758B!important;
+    font-weight:700!important;
+  }
+  .action-table td:nth-child(4){
+    grid-column:1/-1!important;
+    font-size:13px!important;
+    font-weight:750!important;
+    color:#243B58!important;
+    white-space:normal!important;
+  }
+  .action-table td:nth-child(5){
+    grid-column:2/3!important;
+    grid-row:2!important;
+    justify-self:end!important;
+  }
+  .action-table td:nth-child(6){
+    grid-column:1/-1!important;
+    padding-top:8px!important;
+    border-top:1px solid #EEF1F4!important;
+    white-space:normal!important;
+  }
+  .action-table td:nth-child(6)::before{
+    content:"후속조치  ";
+    color:#8390A2;
+    font-size:10px;
+    font-weight:700;
+  }
+  .action-table td:nth-child(7){
+    grid-column:1/2!important;
+    padding-top:4px!important;
+  }
+  .action-table td:nth-child(7)::before{
+    content:"기한  ";
+    color:#8390A2;
+    font-size:10px;
+    font-weight:700;
+  }
+  .action-table td:nth-child(8){
+    grid-column:2/3!important;
+    justify-self:end!important;
+    padding-top:4px!important;
+  }
+
+  .footer{
+    display:block!important;
+    text-align:center!important;
+    font-size:9px!important;
+    line-height:1.6!important;
+    padding:14px 4px!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -681,11 +946,7 @@ button{cursor:pointer}
 <script>
 // 1) Google Apps Script 웹앱 URL을 아래에 넣으면 LIVE 모드로 전환됩니다.
 // Google Sheets LIVE 연동: Apps Script JSON API가 지표 데이터와 함께 후속조치사항/담당부서/조치기한/조치상태 열을 반환하도록 설정하세요.
-const SHEET_API_URLS = [
-  'https://script.google.com/macros/s/AKfycbyIg3Oz0NChXCdafBDPiIL63NkHW34CakVAnJ-Dw5LgoBZCpyLDqO4SJpVd33t9f8aq0A/exec',
-  'https://script.google.com/a/macros/dhc.ac.kr/s/AKfycbyIg3Oz0NChXCdafBDPiIL63NkHW34CakVAnJ-Dw5LgoBZCpyLDqO4SJpVd33t9f8aq0A/exec'
-];
-let ACTIVE_SHEET_API_URL = SHEET_API_URLS[0];
+const APPS_SCRIPT_HOSTED = true;
 
 const SNAPSHOT_DATA = [{"연도": 2026, "대학": "대구보건", "단위과제": "1-1", "구분": "핵심 ①", "지표명": "대학 전체 졸업생 지역 정주 취창업률", "단위": "%", "목표": 40.8, "실적": 43.373493975903614, "달성률": 106.30758327427357, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "1-1", "구분": "핵심 ②", "지표명": "대학 전체 졸업생 지역기업 취업률", "단위": "%", "목표": 40.4, "실적": 41.30120481927711, "달성률": 102.23070499821067, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "1-1", "구분": "자율 ①", "지표명": "참여학생 및 기업 만족도", "단위": "점", "목표": 4.1, "실적": 4.563333333333333, "달성률": 111.30081300813006, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "1-1", "구분": "자율 ②", "지표명": "지역기업 협업지수", "단위": "점", "목표": 130.0, "실적": 100.0, "달성률": 76.92307692307693, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "1-3(경북대)", "구분": "핵심 ①", "지표명": "공유대학 강의 상대 만족도", "단위": "%", "목표": 0.2, "실적": 0.11074197120709693, "달성률": 55.37098560354846, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "1-3(경북대)", "구분": "핵심 ②", "지표명": "지역대학 공유 교육과정 수강 증가율", "단위": "%", "목표": 20.0, "실적": 50.0, "달성률": 250.0, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "1-3(경북대)", "구분": "자율 ①", "지표명": "공유캠퍼스 교육 프로그램 운영 건수", "단위": "%", "목표": 4.0, "실적": 6.0, "달성률": 150.0, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "1-3(영진)", "구분": "핵심 ①", "지표명": "공유대학 강의 상대 만족도", "단위": "점", "목표": 0.2, "실적": 0.21598272138228483, "달성률": 107.99136069114242, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "1-3(영진)", "구분": "핵심 ②", "지표명": "지역대학 공유 교육과정 수강 증가율", "단위": "%", "목표": 20.0, "실적": 2200.0, "달성률": 11000.0, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "1-3(영진)", "구분": "자율 ①", "지표명": "공유캠퍼스 교육 프로그램 운영 건수", "단위": "%", "목표": 4.0, "실적": 7.0, "달성률": 175.0, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "2-1", "구분": "핵심 ①", "지표명": "수혜학생 지역 정주 취업률", "단위": "%", "목표": 35.0, "실적": 52.63157894736842, "달성률": 150.37593984962405, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "2-1", "구분": "핵심 ②", "지표명": "수혜학생 협약기업 취업률", "단위": "%", "목표": 30.0, "실적": 78.94736842105263, "달성률": 263.1578947368421, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "2-1", "구분": "자율 ①", "지표명": "교육생 중도 탈락률", "단위": "%", "목표": 5.7, "실적": 2.3255813953488373, "달성률": 245.1, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "2-1", "구분": "자율 ②", "지표명": "참여학생 및 기업 만족도", "단위": "%", "목표": 82.0, "실적": 96.0, "달성률": 117.07317073170731, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "2-2", "구분": "핵심 ①", "지표명": "수혜학생 지역 정주 취업률", "단위": "%", "목표": 40.0, "실적": 76.92307692307693, "달성률": 192.30769230769232, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "2-2", "구분": "핵심 ②", "지표명": "수혜학생 협약기업 취업률", "단위": "%", "목표": 34.0, "실적": 30.76923076923077, "달성률": 90.49773755656109, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "2-2", "구분": "자율 ①", "지표명": "수혜학생 지역기업 취업 유지율", "단위": "%", "목표": 79.0, "실적": 100.0, "달성률": 126.58227848101266, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "2-2", "구분": "자율 ②", "지표명": "참여학생 및 기업 만족도", "단위": "점", "목표": 4.1, "실적": 4.109999999999999, "달성률": 100.2439024390244, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "2-3", "구분": "핵심 ①", "지표명": "수혜학생 지역 정주 취업률(주관)", "단위": "%", "목표": 40.0, "실적": 44.18604651162791, "달성률": 110.46511627906976, "비고": ""}, {"연도": 2026, "대학": "계명대", "단위과제": "2-3", "구분": "핵심 ①", "지표명": "수혜학생 지역 정주 취업률(계명대)", "단위": "%", "목표": 35.0, "실적": 33.33333333333333, "달성률": 95.23809523809523, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "2-3", "구분": "핵심 ②", "지표명": "수혜학생 협약기업 취업률(주관)", "단위": "%", "목표": 34.0, "실적": 34.883720930232556, "달성률": 102.59917920656633, "비고": ""}, {"연도": 2026, "대학": "계명대", "단위과제": "2-3", "구분": "핵심 ②", "지표명": "수혜학생 협약기업 취업률(계명대)", "단위": "%", "목표": 20.0, "실적": 33.33333333333333, "달성률": 166.66666666666666, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "2-3", "구분": "자율 ①", "지표명": "교육생 중도 탈락률(주관)", "단위": "%", "목표": 5.7, "실적": 2.3255813953488373, "달성률": 40.79967360261118, "비고": ""}, {"연도": 2026, "대학": "계명대", "단위과제": "2-3", "구분": "자율 ①", "지표명": "교육생 중도 탈락률(계명대)", "단위": "%", "목표": 6.0, "실적": 33.33333333333333, "달성률": 555.5555555555554, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "2-3", "구분": "자율 ②", "지표명": "참여학생 및 기업 만족도(주관)", "단위": "점", "목표": 4.1, "실적": 4.745, "달성률": 115.73170731707319, "비고": ""}, {"연도": 2026, "대학": "계명대", "단위과제": "2-3", "구분": "자율 ②", "지표명": "참여학생 및 기업 만족도(계명대)", "단위": "점", "목표": 60.0, "실적": 55.0, "달성률": 91.66666666666666, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-2", "구분": "핵심 ①", "지표명": "수혜기업 사업화매출액", "단위": "억원", "목표": 0.99, "실적": 1.0212121212121212, "달성률": 103.15273951637589, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-2", "구분": "핵심 ②", "지표명": "수혜기업 신규고용 창출인원", "단위": "명", "목표": 0.13, "실적": 0.33333333333333337, "달성률": 256.4102564102564, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-2", "구분": "자율 ①", "지표명": "현장캠퍼스 운영 수익액", "단위": "백만원", "목표": 27.8, "실적": 42.2, "달성률": 151.79856115107916, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-2", "구분": "자율 ②", "지표명": "현장캠퍼스 참여자 만족도", "단위": "점", "목표": 4.1, "실적": 4.503099236641222, "달성률": 109.83168869856638, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-3", "구분": "핵심 ①", "지표명": "수혜기업 사업화매출액(주관)", "단위": "억원", "목표": 0.99, "실적": 0.0, "달성률": 0.0, "비고": ""}, {"연도": 2026, "대학": "영진", "단위과제": "3-3", "구분": "핵심 ①", "지표명": "수혜기업 사업화매출액(영진)", "단위": "억원", "목표": 0.99, "실적": 5.222222222222222, "달성률": 527.4971941638609, "비고": ""}, {"연도": 2026, "대학": "과학대", "단위과제": "3-3", "구분": "핵심 ①", "지표명": "수혜기업 사업화매출액(과학대)", "단위": "억원", "목표": 0.99, "실적": 1.0, "달성률": 101.01010101010101, "비고": ""}, {"연도": 2026, "대학": "진흥원", "단위과제": "3-3", "구분": "핵심 ①", "지표명": "수혜기업 사업화매출액(진흥원)", "단위": "억원", "목표": 0.99, "실적": 1.0, "달성률": 101.01010101010101, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-3", "구분": "핵심 ②", "지표명": "수혜학생 지역 정주 취업률(주관)", "단위": "%", "목표": 43.4, "실적": 30.0, "달성률": 69.12442396313364, "비고": ""}, {"연도": 2026, "대학": "영진", "단위과제": "3-3", "구분": "핵심 ②", "지표명": "수혜학생 지역 정주 취업률(영진)", "단위": "%", "목표": 26.43, "실적": 70.0, "달성률": 264.85054861899357, "비고": ""}, {"연도": 2026, "대학": "과학대", "단위과제": "3-3", "구분": "핵심 ②", "지표명": "수혜학생 지역 정주 취업률(과학대)", "단위": "%", "목표": 60.1, "실적": 70.0, "달성률": 116.47254575707156, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-3", "구분": "자율 ①", "지표명": "수혜기업 신제품 출시 건수(주관)", "단위": "건", "목표": 4.0, "실적": 4.0, "달성률": 100.0, "비고": "산학공동기술개발, 브랜딩 마케팅 지원, 시제품 제작 지원"}, {"연도": 2026, "대학": "영진", "단위과제": "3-3", "구분": "자율 ①", "지표명": "수혜기업 신제품 출시건수(영진)", "단위": "건", "목표": 1.0, "실적": 1.0, "달성률": 100.0, "비고": ""}, {"연도": 2026, "대학": "진흥원", "단위과제": "3-3", "구분": "자율 ①", "지표명": "수혜기업 신제품 출시건수(진흥원)", "단위": "건", "목표": 1.0, "실적": 1.0, "달성률": 100.0, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-3", "구분": "자율 ②", "지표명": "지역 전통산업 고도화 지원 건수(주관)", "단위": "건", "목표": 32.0, "실적": 34.0, "달성률": 106.25, "비고": "애로기술지도, 산학공동기술개발, 브랜딩 마케팅 지원, 창업로컬브랜드 개발 교육, 시제품 제작 지원, 국내외 팝업스토어, 국내외 박람회"}, {"연도": 2026, "대학": "영진", "단위과제": "3-3", "구분": "자율 ②", "지표명": "지역 전통산업 고도화 지원 건수(영진)", "단위": "건", "목표": 60.0, "실적": 41.0, "달성률": 68.33333333333333, "비고": ""}, {"연도": 2026, "대학": "과학대", "단위과제": "3-3", "구분": "자율 ②", "지표명": "지역 전통산업 고도화 지원 건수(과학대)", "단위": "건", "목표": 15.0, "실적": 15.0, "달성률": 100.0, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-4", "구분": "핵심 ①", "지표명": "대학 구성원 신규 창업 건수(주관)", "단위": "건", "목표": 3.0, "실적": 2.0, "달성률": 66.66666666666666, "비고": ""}, {"연도": 2026, "대학": "영진", "단위과제": "3-4", "구분": "핵심 ①", "지표명": "대학 구성원 신규 창업 건수(영진)", "단위": "건", "목표": 1.0, "실적": 1.0, "달성률": 100.0, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-4", "구분": "핵심 ②", "지표명": "창업(수혜)기업 투자 유치액(주관)", "단위": "백만원", "목표": 10.0, "실적": 5.0, "달성률": 50.0, "비고": ""}, {"연도": 2026, "대학": "영진", "단위과제": "3-4", "구분": "핵심 ②", "지표명": "창업(수혜)기업 투자 유치액(영진)", "단위": "백만원", "목표": 6.0, "실적": 6.0, "달성률": 100.0, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-4", "구분": "자율 ①", "지표명": "수혜기업 신규고용 창출 인원(주관)", "단위": "명", "목표": 0.13, "실적": 3.4482758620689657, "달성률": 2652.5198938992044, "비고": ""}, {"연도": 2026, "대학": "영진", "단위과제": "3-4", "구분": "자율 ①", "지표명": "수혜기업 신규고용 창출 인원(영진)", "단위": "명", "목표": 0.13, "실적": 16.666666666666668, "달성률": 12820.51282051282, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-4", "구분": "자율 ②", "지표명": "창업지원 프로그램 참여자 수(주관)", "단위": "명", "목표": 1017.0, "실적": 1091.0, "달성률": 107.2763028515241, "비고": "창업 교과 및 비교과 프로그램 참여자 수"}, {"연도": 2026, "대학": "영진", "단위과제": "3-4", "구분": "자율 ②", "지표명": "창업지원 프로그램 참여자 수(영진)", "단위": "명", "목표": 220.0, "실적": 220.0, "달성률": 100.0, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-5", "구분": "핵심 ①", "지표명": "수혜기업 신규 고용 창출인원", "단위": "명", "목표": 0.13, "실적": 0.6345177664974619, "달성률": 488.09058961343226, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-5", "구분": "핵심 ②", "지표명": "수혜기업 사업화 매출액", "단위": "억원", "목표": 0.99, "실적": 1.0203045685279186, "달성률": 103.06106752807258, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-5", "구분": "자율 ①", "지표명": "창업(수혜)기업 투자 유치액", "단위": "백만원", "목표": 30.0, "실적": 50.0, "달성률": 166.66666666666669, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "3-5", "구분": "자율 ②", "지표명": "창업 기획 지원 건수", "단위": "건", "목표": 14.0, "실적": 9.0, "달성률": 64.28571428571429, "비고": "예비창업패키지, 초기창업패키지, 도약패키지, 캠프 후 창업 기획서 3건"}, {"연도": 2026, "대학": "대구보건", "단위과제": "4-2(경북대)", "구분": "자율 ①", "지표명": "직·주·락 빌리지 프로그램 이용자 수", "단위": "명", "목표": 120.0, "실적": 233.0, "달성률": 194.16666666666666, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "4-2(경북대)", "구분": "자율 ②", "지표명": "수혜 청년 연구자 만족도", "단위": "점", "목표": 85.0, "실적": 90.0, "달성률": 105.88235294117648, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "4-3", "구분": "핵심 ①", "지표명": "외국인 유학생 취업률", "단위": "%", "목표": 10.0, "실적": 0.0, "달성률": 0.0, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "4-3", "구분": "핵심 ②", "지표명": "외국인 유학생 정주율", "단위": "%", "목표": 91.0, "실적": 95.45454545454545, "달성률": 104.8951048951049, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "4-3", "구분": "자율 ①", "지표명": "외국인 유학생 프로그램 운영 건수", "단위": "건", "목표": 11.0, "실적": 14.0, "달성률": 127.27272727272727, "비고": "한국어 교육 지원, 맞춤 교육과정 운영, 기업 매칭 특화 교육과정 운영, 해외보건의료 전문가 역량 강화, 유학생 및 가족 취창업 교육, 지역거주 및 다문화 취창업 역량 강화, 오프라인지원단 운영, 대학적응 프로그램"}, {"연도": 2026, "대학": "대구보건", "단위과제": "4-3", "구분": "자율 ②", "지표명": "수혜 외국인 프로그램 만족도", "단위": "점", "목표": 83.0, "실적": 90.45274725274724, "달성률": 108.9792135575268, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "4-4", "구분": "핵심 ①", "지표명": "평생교육 프로그램 이수율", "단위": "%", "목표": 89.0, "실적": 99.96349698850156, "달성률": 112.31853594213659, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "4-4", "구분": "핵심 ②", "지표명": "평생교육 프로그램 재수강률", "단위": "%", "목표": 20.0, "실적": 25.725762278619683, "달성률": 128.6288113930984, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "4-4", "구분": "자율 ①", "지표명": "평생교육 프로그램 취·창업률", "단위": "%", "목표": 6.0, "실적": 4.819277108433735, "달성률": 80.32128514056225, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "4-4", "구분": "자율 ②", "지표명": "평생교육 프로그램 수혜자 만족도", "단위": "점", "목표": 4.1, "실적": 4.613069767441861, "달성률": 112.51389676687467, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "4-5", "구분": "핵심 ①", "지표명": "지역사회 서비스 제공 프로그램 수혜시민 만족도", "단위": "점", "목표": 87.3, "실적": 92.10108161258604, "달성률": 105.49952074752125, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "4-5", "구분": "핵심 ②", "지표명": "지역사회 서비스 제공 프로그램 참여자 수", "단위": "명", "목표": 1200.0, "실적": 1553.0, "달성률": 129.41666666666666, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "4-5", "구분": "자율 ①", "지표명": "지역사회 문제 발굴∙대응 건수", "단위": "건", "목표": 30.0, "실적": 47.0, "달성률": 156.66666666666666, "비고": ""}, {"연도": 2026, "대학": "대구보건", "단위과제": "4-5", "구분": "자율 ②", "지표명": "지역사회 서비스 제공 프로그램 운영 건수", "단위": "건", "목표": 30.0, "실적": 53.0, "달성률": 176.66666666666666, "비고": ""}];
 
@@ -966,73 +1227,40 @@ function applyLivePayload(json){
   document.querySelector('.live')?.classList.remove('live-fallback');
   $('updatedText').textContent='최종 업데이트 '+new Date().toLocaleString('ko-KR');
 }
-function loadViaJsonp(endpoint){
-  return new Promise((resolve,reject)=>{
-    const cb='dhcLiveCallback_'+Date.now();
-    const s=document.createElement('script');
-    const timer=setTimeout(()=>{cleanup();reject(new Error('JSONP timeout'));},12000);
-    function cleanup(){
-      clearTimeout(timer);
-      try{delete window[cb]}catch(e){window[cb]=undefined}
-      if(s.parentNode)s.parentNode.removeChild(s);
-    }
-    window[cb]=(json)=>{cleanup();resolve(json)};
-    const sep=endpoint.includes('?')?'&':'?';
-    s.src=endpoint+sep+'callback='+encodeURIComponent(cb)+'&t='+Date.now();
-    s.onerror=()=>{cleanup();reject(new Error('JSONP load failed'))};
-    document.head.appendChild(s);
-  });
-}
-async function tryEndpoint(endpoint){
-  // 1) JSONP — GitHub Pages에서 가장 안정적
-  try{
-    const json=await loadViaJsonp(endpoint);
-    applyLivePayload(json);
-    ACTIVE_SHEET_API_URL=endpoint;
-    return true;
-  }catch(e){
-    console.warn('JSONP 실패:',endpoint,e);
-  }
-
-  // 2) fetch
-  try{
-    const sep=endpoint.includes('?')?'&':'?';
-    const res=await fetch(endpoint+sep+'t='+Date.now(),{
-      cache:'no-store',
-      credentials:'omit',
-      redirect:'follow'
-    });
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const json=await res.json();
-    applyLivePayload(json);
-    ACTIVE_SHEET_API_URL=endpoint;
-    return true;
-  }catch(e){
-    console.warn('fetch 실패:',endpoint,e);
-  }
-  return false;
-}
-
-async function loadLive(){
+function loadLive(){
   $('liveText').textContent='Google Sheets 연결 중';
   $('updatedText').textContent='';
 
-  for(const endpoint of SHEET_API_URLS){
-    const ok=await tryEndpoint(endpoint);
-    if(ok){
-      $('liveText').textContent='Google Sheets LIVE 연동';
-      $('updatedText').textContent='최종 업데이트 '+new Date().toLocaleString('ko-KR');
-      return;
-    }
+  if(!(window.google && google.script && google.script.run)){
+    ACTIONS=[];
+    setOptions();render();
+    $('liveText').textContent='모바일 미리보기 모드';
+    $('updatedText').textContent='LIVE 데이터는 Apps Script 웹앱 주소에서 확인됩니다';
+    return;
   }
 
-  // LIVE 연결 실패 시 화면은 유지하되 상태 문구를 과도하게 경고하지 않음.
-  ACTIONS=[];
-  DATA=[...SNAPSHOT_DATA];
-  setOptions();render();
-  document.querySelector('.live')?.classList.add('live-fallback');
-  $('liveText').textContent='Google Sheets 연결 실패';
-  $('updatedText').textContent='후속조치 실시간 데이터를 불러오지 못했습니다';
+  google.script.run
+    .withSuccessHandler(json=>{
+      try{
+        applyLivePayload(json);
+        $('liveText').textContent='Google Sheets LIVE 연동';
+        $('updatedText').textContent='최종 업데이트 '+new Date().toLocaleString('ko-KR');
+      }catch(e){
+        console.error(e);
+        ACTIONS=[];
+        render();
+        $('liveText').textContent='Google Sheets 데이터 오류';
+        $('updatedText').textContent=String(e.message||e);
+      }
+    })
+    .withFailureHandler(err=>{
+      console.error(err);
+      ACTIONS=[];
+      render();
+      $('liveText').textContent='Google Sheets 연결 실패';
+      $('updatedText').textContent=String((err&&err.message)||err||'연결 실패');
+    })
+    .getDashboardData();
 }
 ['change'].forEach(evt=>[els.status,els.univ,els.task,els.type,els.sort].forEach(el=>el.addEventListener(evt,render)));
 $('refreshBtn').addEventListener('click',loadLive);
