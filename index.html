@@ -397,6 +397,7 @@ const EMBLEMS={
 function emblemOf(v){return EMBLEMS[instName(v)]||''}
 
 let DATA = [...SNAPSHOT_DATA];
+let ACTIONS = [];
 const $ = id => document.getElementById(id);
 const els = {
   status:$('statusFilter'), univ:$('univFilter'), task:$('taskFilter'), type:$('typeFilter'), sort:$('sortFilter'),
@@ -570,28 +571,41 @@ function statusClass(state){
 }
 
 function renderActions(managed){
-  const sorted=[...managed].sort((a,b)=>(Number(a.달성률)||0)-(Number(b.달성률)||0));
-  const top10=sorted.slice(0,10);
-  const top6=top10.slice(0,6);
-  $('actionSummary').textContent=`관리대상 ${managed.length}건 · TOP 10 선별 · TOP 6 조치·환류`;
+  const body=$('actionBody');
+  const sourceActions=(ACTIONS && ACTIONS.length)?ACTIONS:[...managed]
+    .sort((a,b)=>(Number(a.달성률)||0)-(Number(b.달성률)||0))
+    .slice(0,6)
+    .map(x=>({
+      단위과제:x.단위과제,
+      구분:x.구분,
+      지표명:x.지표명,
+      대학:x.대학,
+      달성률:x.달성률,
+      조치환류:x['조치·환류']||x.후속조치||''
+    }));
+
+  $('actionSummary').textContent=`Google Sheets 연동 · TOP ${sourceActions.length} 조치·환류`;
+
   const top10El=$('top10List');
   if(top10El){
-    top10El.innerHTML=top10.map((x,i)=>`<div class="top10-chip"><span>${i+1}</span><b>${x.단위과제}</b><span>${fmt(x.달성률)}</span></div>`).join('');
+    const sorted=[...managed].sort((a,b)=>(Number(a.달성률)||0)-(Number(b.달성률)||0)).slice(0,10);
+    top10El.innerHTML=sorted.map((x,i)=>`<div class="top10-chip"><span>${i+1}</span><b>${x.단위과제}</b><span>${fmt(x.달성률)}</span></div>`).join('');
   }
-  const body=$('actionBody');
-  if(!top6.length){
-    body.innerHTML='<tr><td colspan="8" style="text-align:center;color:#8A96A6;padding:28px">관리대상 지표가 없습니다.</td></tr>';
+
+  if(!sourceActions.length){
+    body.innerHTML='<tr><td colspan="8" style="text-align:center;color:#8A96A6;padding:28px">Google Sheets 조치·환류 데이터가 없습니다.</td></tr>';
     return;
   }
+
   const due=plus14DaysText();
-  body.innerHTML=top6.map((x,i)=>{
-    const action=x.후속조치||x.후속조치사항||x['조치·환류']||x.조치환류||'';
+  body.innerHTML=sourceActions.map(x=>{
+    const action=x.조치환류||x['조치·환류']||'';
     const state=autoActionStatus(action);
     const cls=statusClass(state);
     return `<tr>
-      <td>${x.단위과제}</td>
-      <td><div class="inst-brand"><img class="inst-emblem" src="${emblemOf(x.대학)}" alt=""><span class="inst-name">${instName(x.대학)}</span></div></td>
-      <td>${String(x.구분).replace(/\s+/g,'')}</td>
+      <td>${x.단위과제||''}</td>
+      <td><div class="inst-brand"><img class="inst-emblem" src="${emblemOf(x.대학)}" alt=""><span class="inst-name">${instName(x.대학||'')}</span></div></td>
+      <td>${String(x.구분||'').replace(/\s+/g,'')}</td>
       <td>${x.지표명||''}</td>
       <td><span class="rate-chip">${fmt(x.달성률)}</span></td>
       <td class="action-text">${action||'<span class="unset">Google Sheets 미입력</span>'}</td>
@@ -613,6 +627,7 @@ async function loadLive(){
     if(!res.ok) throw new Error('HTTP '+res.status);
     const json=await res.json();
     const rows=Array.isArray(json)?json:(json.data||[]);
+    ACTIONS = Array.isArray(json.actions)?json.actions:[];
     if(!rows.length) throw new Error('데이터 없음');
     DATA=rows.map(x=>({
       연도:x.연도??x.year??2026,
@@ -634,7 +649,7 @@ async function loadLive(){
     $('updatedText').textContent='최종 업데이트 '+new Date().toLocaleString('ko-KR');
   }catch(e){
     console.error(e);
-    DATA=[...SNAPSHOT_DATA]; setOptions(); render();
+    ACTIONS=[]; DATA=[...SNAPSHOT_DATA]; setOptions(); render();
     $('liveText').textContent='LIVE 연결 실패 · 내장 데이터';
     $('updatedText').textContent='';
   }
