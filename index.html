@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>DHC 앵커사업 통합 성과관리 DASHBOARD</title>
+<title>DHC 앵커사업 통합 성과관리</title>
 <style>
 :root{--dhc:#B40059;--deep:#750038;--mid:#CE3B7F;--soft:#F5DCE8;--pale:#FDF7FA;--ink:#202329;--text:#484F57;--muted:#9298A0;--line:#E5E8EB;--bg:#F4F5F7;--good:#2F8064;--warn:#C88B24;--manage:#D5732F;--risk:#C14951}
 *{box-sizing:border-box}
@@ -30,7 +30,7 @@ select:focus{border-color:var(--dhc);box-shadow:0 0 0 3px rgba(180,0,89,.08)}
 .task-card{border:1px solid var(--line);border-radius:12px;padding:10px;background:linear-gradient(#fff,#FFFAFC);opacity:0;transform:translateY(8px);animation:cardIn .36s ease forwards}
 .task-head{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px} .task-head strong{font-size:11px;color:var(--ink)} .task-head em{font-size:8px;font-style:normal;color:var(--muted)}
 .metric{display:grid;grid-template-columns:47px 1fr 45px;gap:6px;align-items:center;margin:6px 0} .metric span{font-size:8.5px;font-weight:850;color:#666D75} .metric b{font-size:8.5px;text-align:right}
-.track{height:7px;background:#EEF0F2;border-radius:99px;overflow:hidden} .bar{height:100%;width:0;border-radius:99px;transition:width .65s cubic-bezier(.22,.8,.3,1)}
+.track{height:7px;background:#EEF0F2;border-radius:99px;overflow:hidden} .bar{display:block;height:100%;width:0;border-radius:99px;transition:width .65s cubic-bezier(.22,.8,.3,1)}
 .donut-wrap{display:grid;place-items:center;padding:6px 0 12px}
 .donut{width:150px;height:150px;border-radius:50%;position:relative;display:grid;place-items:center;transition:background .55s ease}
 .donut:after{content:"";position:absolute;width:96px;height:96px;border-radius:50%;background:#fff}
