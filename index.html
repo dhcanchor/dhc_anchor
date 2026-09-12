@@ -617,6 +617,7 @@ async function loadLive(){
 ['change'].forEach(evt=>[els.status,els.univ,els.task,els.type,els.sort].forEach(el=>el.addEventListener(evt,render)));
 $('refreshBtn').addEventListener('click',loadLive);
 
+initEmblems();
 setOptions();
 render();
 loadLive();
