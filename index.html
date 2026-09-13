@@ -1218,7 +1218,7 @@ function renderActions(managed){
       <td>${x.지표명||''}</td>
       <td><span class="rate-chip">${fmt(x.달성률)}</span></td>
       <td class="action-text">${action||'<span class="unset">Google Sheets 미입력</span>'}</td>
-      <td>${x.조치기한||'<span class="unset">입력일 대기</span>'}</td>
+      <td>${x.조치기한||x.dueDate||x.기한||'<span class="unset">입력일 대기</span>'}</td>
       <td><span class="badge ${cls}">${state}</span></td>
     </tr>`;
   }).join('');
@@ -1350,10 +1350,39 @@ function parseActionTable(table, indicators){
 
 function enrichActions(){
   ACTIONS=(ACTIONS||[]).map(a=>{
-    if(a.대학 && a.달성률!=='' && a.달성률!==undefined) return a;
-    let hit=DATA.find(x=>norm(x.단위과제)===norm(a.단위과제)&&norm(x.구분)===norm(a.구분)&&norm(x.지표명)===norm(a.지표명));
-    if(!hit) hit=DATA.find(x=>norm(x.지표명)===norm(a.지표명));
-    return {...a,대학:a.대학||hit?.대학||'',달성률:(a.달성률!==''&&a.달성률!==undefined)?a.달성률:(hit?.달성률??'')};
+    const task=a.단위과제??a['단위과제']??'';
+    const type=a.구분??a['지표구분']??a['구분']??'';
+    const name=a.지표명??a['지표명']??'';
+
+    // 1순위: 단위과제 + 지표구분 + 지표명 완전 일치
+    let hit=DATA.find(x=>
+      norm(x.단위과제)===norm(task) &&
+      norm(x.구분)===norm(type) &&
+      norm(x.지표명)===norm(name)
+    );
+
+    // 2순위: 단위과제 + 지표명 일치
+    // 구글시트 API가 '지표구분'을 다른 키로 전달해도 경북대/영진 혼선을 방지
+    if(!hit){
+      hit=DATA.find(x=>
+        norm(x.단위과제)===norm(task) &&
+        norm(x.지표명)===norm(name)
+      );
+    }
+
+    // 3순위: 지표명 단독 일치는 마지막 보조수단으로만 사용
+    if(!hit){
+      hit=DATA.find(x=>norm(x.지표명)===norm(name));
+    }
+
+    return {
+      ...a,
+      단위과제:task,
+      구분:type,
+      지표명:name,
+      대학:a.대학||hit?.대학||'',
+      달성률:hit?.달성률??a.달성률??''
+    };
   });
 }
 
