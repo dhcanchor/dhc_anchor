@@ -867,7 +867,7 @@ button{cursor:pointer}
           <rect x="14" y="33" width="5" height="5" rx="1" fill="white"/>
         </svg>
       </div>
-      <div><small>데이터 기준일</small><b id="kDate" style="font-size:22px">2026. 09. 12.</b><div class="sub">최종 갱신 기준</div></div>
+      <div><small>데이터 기준일</small><b id="kDate" style="font-size:22px">2026.9.12</b><div class="sub">최종 갱신 기준</div></div>
     </article>
   </section>
 
@@ -1143,6 +1143,15 @@ function render(){
   renderActions(managed);
 }
 
+function formatDashboardDate(value){
+  if(!value) return '';
+  const d=value instanceof Date ? value : new Date(value);
+  if(!Number.isNaN(d.getTime())){
+    return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}`;
+  }
+  const m=String(value).match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+  return m ? `${Number(m[1])}.${Number(m[2])}.${Number(m[3])}` : String(value);
+}
 function parseBaseDate(){
   const t=($('kDate')?.textContent||'').trim();
   const m=t.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
@@ -1152,8 +1161,7 @@ function parseBaseDate(){
 function plus14DaysText(){
   const d=parseBaseDate();
   d.setDate(d.getDate()+14);
-  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
-  return `${y}. ${m}. ${day}.`;
+  return formatDashboardDate(d);
 }
 function autoActionStatus(action){
   const a=String(action||'').trim();
@@ -1222,13 +1230,16 @@ function applyLivePayload(json, sourceLabel='Apps Script API'){
     비고:x.비고??''
   }));
   ACTIONS=Array.isArray(json.actions)?json.actions:[];
+  const lastUpdated=json?.meta?.lastUpdated||json?.lastUpdated||json?.updatedAt||'';
+  if(lastUpdated && $('kDate')) $('kDate').textContent=formatDashboardDate(lastUpdated);
   enrichActions();
   setOptions(); render();
-  setLiveState(true, sourceLabel);
+  setLiveState(true, sourceLabel, lastUpdated);
 }
 
 const SHEET_ID='1z9P3FhqlhGOUHMCkBFfPmQA-oJhQu1uJpkoI6gI9ZsE';
-const DEFAULT_API_URL='';
+// Apps Script를 웹앱으로 배포한 뒤 /exec 주소를 아래 따옴표 안에 붙여넣으세요.
+const DEFAULT_API_URL='https://script.google.com/a/macros/dhc.ac.kr/s/AKfycbwRblKCJYYy2a-xTogEvuAj08PtKhFyo1-5r5IuGctRl4eDMEgz_s_bd49i9_x-w2scxw/exec';
 
 function currentApiUrl(){
   try{
@@ -1238,12 +1249,13 @@ function currentApiUrl(){
   }catch(e){ return DEFAULT_API_URL; }
 }
 
-function setLiveState(ok, source=''){
+function setLiveState(ok, source='', lastUpdated=''){
   const live=document.querySelector('.live');
   if(ok){
     live?.classList.remove('live-fallback');
     $('liveText').textContent='Google Sheets LIVE 연동';
-    $('updatedText').textContent=`${source} · ${new Date().toLocaleString('ko-KR')}`;
+    const baseDate=lastUpdated ? formatDashboardDate(lastUpdated) : ($('kDate')?.textContent||'');
+    $('updatedText').textContent=baseDate ? `${source} · 데이터 기준 ${baseDate}` : source;
   }else{
     live?.classList.add('live-fallback');
     $('liveText').textContent='Google Sheets 최근 동기화값';
