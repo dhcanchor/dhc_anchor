@@ -1183,6 +1183,24 @@ function autoActionStatus(action){
   if(/개선조치\s*및\s*환류\s*필요|환류\s*필요|개선조치/.test(a)) return '담당부서 논의';
   return '담당부서 논의';
 }
+
+function resolveActionDue(x){
+  const direct=x?.조치기한??x?.dueDate??x?.기한??'';
+  if(String(direct||'').trim()) return String(direct).trim();
+
+  const raw=x?.조치입력일??x?.['조치입력일']??x?.inputDate??'';
+  if(!raw) return '';
+
+  const s=String(raw).trim().replace(/\./g,'-').replace(/\s+/g,'');
+  const m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})-?$/);
+  if(!m) return '';
+
+  const d=new Date(Number(m[1]),Number(m[2])-1,Number(m[3]));
+  if(isNaN(d)) return '';
+  d.setDate(d.getDate()+7);
+  return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}`;
+}
+
 function statusClass(state){
   if(/완료|종결/.test(state)) return 'done';
   if(/진행|추진|취합|확인|검토|논의/.test(state)) return 'progress';
@@ -1218,7 +1236,7 @@ function renderActions(managed){
       <td>${x.지표명||''}</td>
       <td><span class="rate-chip">${fmt(x.달성률)}</span></td>
       <td class="action-text">${action||'<span class="unset">Google Sheets 미입력</span>'}</td>
-      <td>${x.조치기한||x.dueDate||x.기한||'<span class="unset">입력일 대기</span>'}</td>
+      <td>${resolveActionDue(x)||'<span class="unset">입력일 대기</span>'}</td>
       <td><span class="badge ${cls}">${state}</span></td>
     </tr>`;
   }).join('');
@@ -1375,30 +1393,51 @@ function enrichActions(){
       hit=DATA.find(x=>norm(x.지표명)===norm(name));
     }
 
-    return {
+    const normalized={
       ...a,
-      단위과제: task,
-      구분: type,
-      지표명: name,
-      대학: a.대학 || hit?.대학 || '',
-      달성률: hit?.달성률 ?? a.달성률 ?? '',
-
-      // Apps Script에서 전달된 조치·환류 데이터 유지
-      조치환류: a.조치환류 ?? a['조치·환류'] ?? '',
-      조치입력일: a.조치입력일 ?? a['조치입력일'] ?? '',
-      조치기한: a.조치기한 ?? a['조치기한'] ?? '',
-      관리상태: a.관리상태 ?? '',
-      조치상태: a.조치상태 ?? ''
+      단위과제:task,
+      구분:type,
+      지표명:name,
+      대학:a.대학||hit?.대학||'',
+      달성률:hit?.달성률??a.달성률??'',
+      조치환류:a.조치환류??a['조치·환류']??'',
+      조치입력일:a.조치입력일??a['조치입력일']??'',
+      조치기한:a.조치기한??a['조치기한']??a.dueDate??a.기한??'',
+      관리상태:a.관리상태??'',
+      조치상태:a.조치상태??''
     };
+    if(!normalized.조치기한) normalized.조치기한=resolveActionDue(normalized);
+    return normalized;
   });
 }
 
 async function tryApi(){
   const url=currentApiUrl();
   if(!url) throw new Error('API URL 없음');
-  const payload=await jsonp(url);
-  applyLivePayload(payload,'Apps Script API');
-  return true;
+
+  let lastError=null;
+
+  try{
+    const sep=url.includes('?')?'&':'?';
+    const res=await fetch(url+sep+'_='+Date.now(),{cache:'no-store',redirect:'follow'});
+    if(!res.ok) throw new Error('API HTTP '+res.status);
+    const payload=await res.json();
+    applyLivePayload(payload,'Apps Script API');
+    return true;
+  }catch(e){
+    lastError=e;
+    console.warn('Apps Script fetch 실패 → JSONP 재시도',e);
+  }
+
+  try{
+    const payload=await jsonp(url);
+    applyLivePayload(payload,'Apps Script API');
+    return true;
+  }catch(e){
+    lastError=e;
+  }
+
+  throw lastError||new Error('Apps Script API 연결 실패');
 }
 
 async function tryGviz(){
@@ -1427,13 +1466,22 @@ function useFallback(){
 async function loadLive(){
   $('liveText').textContent='Google Sheets 연결 중';
   $('updatedText').textContent='최신 데이터를 확인하고 있습니다';
+
   try{
     await tryApi();
     return;
   }catch(e){
     console.error('Apps Script API 실패',e);
-    setLiveState(false);
   }
+
+  try{
+    await tryGviz();
+    return;
+  }catch(e){
+    console.error('Google Sheets 직접연결 실패',e);
+  }
+
+  useFallback();
 }
 ['change'].forEach(evt=>[els.status,els.univ,els.task,els.type,els.sort].forEach(el=>el.addEventListener(evt,render)));
 $('refreshBtn').addEventListener('click',loadLive);
