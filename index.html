@@ -1248,7 +1248,7 @@ function applyLivePayload(json, sourceLabel='Apps Script API'){
 }
 
 const SHEET_ID='1z9P3FhqlhGOUHMCkBFfPmQA-oJhQu1uJpkoI6gI9ZsE';
-const DEFAULT_API_URL='https://script.google.com/macros/s/AKfycbwhNprbDO66tkLRaxfn5OO49sALNzWFRv3h2kBGKF83baq_2ZaV6qZaYRLj0SQ5rT59Jg/exec';
+const DEFAULT_API_URL='https://script.google.com/macros/s/AKfycbyRuwUw4ZOpzCjtgY2jusLkKXfufLdB3nlCKbeO9CO6j_iFZd07RdH5HBEuX42Ob2RR8Q/exec';
 
 function currentApiUrl(){
   return DEFAULT_API_URL;
@@ -1377,11 +1377,18 @@ function enrichActions(){
 
     return {
       ...a,
-      단위과제:task,
-      구분:type,
-      지표명:name,
-      대학:a.대학||hit?.대학||'',
-      달성률:hit?.달성률??a.달성률??''
+      단위과제: task,
+      구분: type,
+      지표명: name,
+      대학: a.대학 || hit?.대학 || '',
+      달성률: hit?.달성률 ?? a.달성률 ?? '',
+
+      // Apps Script에서 전달된 조치·환류 데이터 유지
+      조치환류: a.조치환류 ?? a['조치·환류'] ?? '',
+      조치입력일: a.조치입력일 ?? a['조치입력일'] ?? '',
+      조치기한: a.조치기한 ?? a['조치기한'] ?? '',
+      관리상태: a.관리상태 ?? '',
+      조치상태: a.조치상태 ?? ''
     };
   });
 }
