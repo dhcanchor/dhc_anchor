@@ -86,7 +86,27 @@ button{cursor:pointer}
 .task-title{min-width:0;display:flex;align-items:baseline;gap:9px}
 .task-code{font-size:18px;font-weight:800;color:var(--navy);white-space:nowrap}
 .task-name{font-size:13px;font-weight:700;color:#243B58;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:245px}
-.univ-chip{font-size:10px;color:#B40059;background:#FCEAF3;border:1px solid #F6D2E3;padding:4px 8px;border-radius:8px;font-weight:700;white-space:nowrap}
+.univ-chip{
+  font-size:10px;
+  color:#243B58;
+  background:linear-gradient(180deg,#F8FAFC 0%,#F1F5F8 100%);
+  border:1px solid #DCE4EC;
+  padding:5px 9px;
+  border-radius:9px;
+  font-weight:750;
+  white-space:nowrap;
+  box-shadow:0 2px 6px rgba(20,35,55,.035)
+}
+.univ-chip:hover{
+  background:#EEF3F7;
+  border-color:#CFD9E3
+}
+.univ-chip .inst-emblem{
+  filter:none;
+}
+.univ-chip > span{
+  color:#243B58;
+}
 .metric{display:grid;grid-template-columns:54px 1fr 76px;gap:8px;align-items:center;margin:8px 0}
 .metric-label{font-size:11.5px;font-weight:650;color:#516176}
 .track{height:10px;background:#E9EEF3;border-radius:99px;overflow:hidden;position:relative}
