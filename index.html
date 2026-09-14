@@ -91,8 +91,23 @@ button{cursor:pointer}
 .metric-label{font-size:11.5px;font-weight:650;color:#516176}
 .track{height:10px;background:#E9EEF3;border-radius:99px;overflow:hidden;position:relative}
 .fill{height:100%;width:0;border-radius:99px;transition:width .7s cubic-bezier(.2,.7,.2,1)}
-.metric-val{text-align:right;color:#33465E;font-size:11.5px;font-weight:950}
+.metric-val{text-align:right;color:#33465E;font-size:11.5px;font-weight:950;white-space:nowrap}
 .metric-val.risk{color:#E10F3F}
+.metric-val.overachieved{color:#B40059}
+.over-star{display:inline-block;margin-right:2px;font-size:10px;line-height:1;vertical-align:1px;filter:saturate(.95)}
+.metric-label.has-tooltip{cursor:help;text-decoration:none;outline:none}
+.metric-label.has-tooltip:hover,.metric-label.has-tooltip:focus{color:var(--dhc)}
+.metric-tooltip-pop{
+  position:fixed;z-index:9999;display:none;max-width:min(280px,calc(100vw - 20px));
+  padding:9px 11px;border-radius:10px;background:#1F2D40;color:#fff;
+  font-size:11.5px;font-weight:700;line-height:1.45;letter-spacing:-.02em;
+  box-shadow:0 8px 22px rgba(18,31,48,.20);pointer-events:none
+}
+.metric-tooltip-pop.show{display:block}
+.metric-tooltip-pop::before{
+  content:"";position:absolute;top:-5px;left:18px;width:10px;height:10px;
+  background:#1F2D40;transform:rotate(45deg);border-radius:2px
+}
 .empty-metric{opacity:.55}
 
 .side{display:grid;gap:14px;align-content:start}
@@ -285,9 +300,9 @@ button{cursor:pointer}
   .side{grid-template-columns:1fr !important}
 }
 @media(max-width:390px){
-  .metric{grid-template-columns:48px minmax(0,1fr) 50px !important;gap:6px !important}
+  .metric{grid-template-columns:48px minmax(0,1fr) 60px !important;gap:6px !important}
   .metric-label,.metric-value{font-size:11px}
-  .metric-value{width:50px;min-width:50px}
+  .metric-value{width:60px;min-width:60px}
   .task-code{font-size:17px}
   .task-name{font-size:12px}
 }
@@ -639,12 +654,12 @@ button{cursor:pointer}
   }
 
   .metric{
-    grid-template-columns:50px minmax(0,1fr) 55px!important;
+    grid-template-columns:50px minmax(0,1fr) 64px!important;
     gap:7px!important;
     margin:8px 0!important;
   }
   .metric-label{font-size:11px!important}
-  .metric-val{font-size:11px!important;width:55px!important;text-align:right!important}
+  .metric-val{font-size:11px!important;width:64px!important;text-align:right!important}
   .track{height:9px!important}
 
   .side{grid-template-columns:1fr!important}
@@ -1055,6 +1070,9 @@ function shortLabel(g){
   if(g.includes('자율')) return g.replace('자율','자율').replace(/\s+/g,'');
   return g;
 }
+function escAttr(v){
+  return String(v??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 function currentData(){
   let d=[...DATA];
   if(els.status.value!=='전체') d=d.filter(x=>statusOf(x.달성률)===els.status.value);
@@ -1104,10 +1122,12 @@ function render(){
       const r=map.get(label);
       if(!r) return `<div class="metric empty-metric"><span class="metric-label">${shortLabel(label)}</span><div class="track"></div><span class="metric-val">-</span></div>`;
       const rate=Number(r.달성률)||0, w=Math.min(Math.max(rate,0),100), col=colorOf(rate);
-      return `<div class="metric" title="${r.지표명}">
-        <span class="metric-label">${shortLabel(label)}</span>
+      const over=rate>100;
+      const metricName=escAttr(r.지표명);
+      return `<div class="metric">
+        <span class="metric-label has-tooltip" data-metric-name="${metricName}" tabindex="0" role="button" aria-label="${metricName}">${shortLabel(label)}</span>
         <div class="track"><div class="fill" data-w="${w}" style="background:${col}"></div></div>
-        <span class="metric-val ${statusOf(rate)==='위험'?'risk':''}">${fmt(rate)}</span>
+        <span class="metric-val ${statusOf(rate)==='위험'?'risk':''} ${over?'overachieved':''}">${over?'<span class="over-star" aria-hidden="true">⭐</span>':''}${fmt(rate)}</span>
       </div>`;
     }).join('');
     return `<article class="task-card">
@@ -1483,6 +1503,72 @@ async function loadLive(){
 
   useFallback();
 }
+// 지표명 커스텀 툴팁: PC는 hover/focus, 모바일은 tap
+const metricTooltip=document.createElement('div');
+metricTooltip.id='metricTooltip';
+metricTooltip.className='metric-tooltip-pop';
+metricTooltip.setAttribute('role','tooltip');
+document.body.appendChild(metricTooltip);
+let pinnedMetricLabel=null;
+
+function positionMetricTooltip(el){
+  const rect=el.getBoundingClientRect();
+  metricTooltip.style.left='8px';
+  metricTooltip.style.top='8px';
+  const box=metricTooltip.getBoundingClientRect();
+  let left=Math.min(Math.max(rect.left,8),window.innerWidth-box.width-8);
+  let top=rect.bottom+8;
+  if(top+box.height>window.innerHeight-8) top=Math.max(8,rect.top-box.height-8);
+  metricTooltip.style.left=left+'px';
+  metricTooltip.style.top=top+'px';
+}
+function showMetricTooltip(el,pin=false){
+  const name=el?.dataset?.metricName;
+  if(!name)return;
+  metricTooltip.textContent=name;
+  metricTooltip.classList.add('show');
+  positionMetricTooltip(el);
+  if(pin)pinnedMetricLabel=el;
+}
+function hideMetricTooltip(force=false){
+  if(pinnedMetricLabel&&!force)return;
+  metricTooltip.classList.remove('show');
+}
+function closePinnedMetricTooltip(){
+  pinnedMetricLabel=null;
+  metricTooltip.classList.remove('show');
+}
+
+document.addEventListener('mouseover',e=>{
+  const el=e.target.closest?.('.metric-label.has-tooltip');
+  if(el&&!pinnedMetricLabel)showMetricTooltip(el);
+});
+document.addEventListener('mouseout',e=>{
+  const el=e.target.closest?.('.metric-label.has-tooltip');
+  if(el&&!pinnedMetricLabel)hideMetricTooltip();
+});
+document.addEventListener('focusin',e=>{
+  const el=e.target.closest?.('.metric-label.has-tooltip');
+  if(el&&!pinnedMetricLabel)showMetricTooltip(el);
+});
+document.addEventListener('focusout',e=>{
+  const el=e.target.closest?.('.metric-label.has-tooltip');
+  if(el&&!pinnedMetricLabel)hideMetricTooltip();
+});
+document.addEventListener('click',e=>{
+  const el=e.target.closest?.('.metric-label.has-tooltip');
+  if(el){
+    e.stopPropagation();
+    if(pinnedMetricLabel===el){closePinnedMetricTooltip();return;}
+    closePinnedMetricTooltip();
+    showMetricTooltip(el,true);
+    return;
+  }
+  closePinnedMetricTooltip();
+});
+window.addEventListener('resize',closePinnedMetricTooltip);
+window.addEventListener('scroll',closePinnedMetricTooltip,{passive:true});
+
 ['change'].forEach(evt=>[els.status,els.univ,els.task,els.type,els.sort].forEach(el=>el.addEventListener(evt,render)));
 $('refreshBtn').addEventListener('click',loadLive);
 
