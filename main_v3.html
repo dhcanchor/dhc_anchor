@@ -1786,21 +1786,48 @@ function pick(o,keys){for(const k of keys){if(o&&o[k]!==undefined&&o[k]!==null&&
 function n(v){if(v===null||v===undefined||v==='')return null;if(typeof v==='number')return v;const x=parseFloat(String(v).replace(/[,%\s]/g,''));return Number.isFinite(x)?x:null}
 function normalizeQuant(o){
   const target=n(pick(o,['목표값','목푯값','target','goal']));
-  const actual=n(pick(o,['달성값','실적','actual','result']))??0;
+  const actualRaw=n(pick(o,['달성값','실적','actual','result']));
+  const actual=actualRaw??0;
+
+  /*
+    대학별 실적은 API의 orgs[].actual을 기준으로 판정한다.
+    기존의 대구/계대/영진/과학 값은 참여대학·목표배분 정보일 수 있으므로
+    '실적값 입력 여부' 판정에는 사용하지 않는다.
+  */
+  const orgs=Array.isArray(o?.orgs)
+    ? o.orgs.map(x=>({
+        name:String(x?.name||'').trim(),
+        target:n(x?.target),
+        actual:n(x?.actual)
+      })).filter(x=>x.name)
+    : [];
+
   return {
     task:String(pick(o,['단위과제','task','taskCode'])||''),
     taskName:String(pick(o,['단위과제명','taskName','과제명'])||''),
     execution:String(pick(o,['단위과제 실행내용','실행내용','execution'])||''),
     detail:String(pick(o,['단위과제 세부 실적','세부실적','세부 실적','detail'])||''),
-    target,actual,
+    target,actual,actualEntered:actualRaw!==null,orgs,
     dept:String(pick(o,['담당부서','dept'])||''),
     definition:String(pick(o,['실적정의','definition'])||''),
+    /* 아래 값은 참여기관/분류 표시용으로만 유지 */
     대구:n(pick(o,['대구','실적값1','DHC'])),
     계대:n(pick(o,['계대','실적값2','KMU'])),
     영진:n(pick(o,['영진','실적값3','YJU'])),
     과학:n(pick(o,['과학','실적값4','DGC'])),
     date:String(pick(o,['최종업데이트','수정일','date'])||'')
   };
+}
+
+const QUANT_ORG_ALIASES={
+  '대구보건대학교':['대구보건대학교','대구보건대','대구보건','DHC'],
+  '계명대학교':['계명대학교','계명대','계대','KMU'],
+  '영진전문대학교':['영진전문대학교','영진전문대','영진','YJU'],
+  '대구과학대학교':['대구과학대학교','대구과학대','과학대','과학','DGC']
+};
+function quantOrgRecord(r,u){
+  const aliases=QUANT_ORG_ALIASES[u.name]||[u.name];
+  return (r.orgs||[]).find(o=>aliases.includes(String(o.name||'').trim()))||null;
 }
 function extractQuant(payload){
   let a=payload;
@@ -1835,18 +1862,31 @@ function renderQuant(){
   $('qDonut').style.background=donutGradient(c,total,'blue');
   $('qLegend').innerHTML=legendHtml(c,total,'blue');
 
+  /* 대학별 정량실적 현황
+     - 분모: 해당 대학·기관에 목표가 배분된 관리 대상 항목
+     - 분자: orgs[].actual에 실제 값이 입력된 항목
+     - 0을 직접 입력한 경우도 '입력'으로 인정
+     - 목표배분값을 실적값으로 오인하지 않도록 기존 r[u.key]는 분모 보조판정에만 사용
+  */
   const stats=QUANT_CONFIG.universities.map(u=>{
-    const applicable=rows.filter(r=>r[u.key]!==null);
-    const positive=applicable.filter(r=>Number(r[u.key])>0).length;
-    const rate=applicable.length?positive/applicable.length*100:0;
-    return {...u,applicable:applicable.length,positive,rate};
+    const applicable=rows.filter(r=>{
+      const org=quantOrgRecord(r,u);
+      return !!org && (org.target!==null || org.actual!==null)
+        || (!r.orgs?.length && r[u.key]!==null);
+    });
+    const entered=applicable.filter(r=>{
+      const org=quantOrgRecord(r,u);
+      return !!org && org.actual!==null;
+    }).length;
+    const rate=applicable.length?entered/applicable.length*100:0;
+    return {...u,applicable:applicable.length,entered,rate};
   });
 
   $('qUniversities').innerHTML=stats.map(u=>`
     <div class="univ-row">
       <span class="univ-chip inst-brand"><img class="inst-emblem" src="${u.logo}" alt=""><span>${u.name}</span></span>
       <div class="track university-track"><div class="fill university-fill" style="width:${Math.min(u.rate,100)}%"></div></div>
-      <b>${u.positive}/${u.applicable}</b>
+      <b>${u.entered}/${u.applicable}</b>
     </div>`).join('');
 
   const top=[...rows]
