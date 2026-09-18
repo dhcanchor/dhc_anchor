@@ -1163,9 +1163,9 @@ body{
     </div>
   </header>
   <nav class="global-master-nav" aria-label="성과관리 메뉴">
-  <a href="./main_v3.html?v=20260918c">통합현황</a>
-  <a href="./performance_v3.html?v=20260918c">성과지표 관리</a>
-  <a class="active" href="./quantitative_v3.html?v=20260918c">정량실적 관리</a>
+  <a href="./main_v3.html?v=20260918d">통합현황</a>
+  <a href="./performance_v3.html?v=20260918d">성과지표 관리</a>
+  <a class="active" href="./quantitative_v3.html?v=20260918d">정량실적 관리</a>
 </nav>
 </div>
 <div class="wrap">
@@ -1238,18 +1238,113 @@ function resetAll(){
  ['statusFilter','orgFilter','taskFilter','deptFilter','recentFilter'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
  render();
 }
-async function loadLive(){
- syncText.textContent='최신 데이터를 확인하고 있습니다';
- try{
-  let res=await fetch(API_URL+'?sheet='+encodeURIComponent('정량실적')+'&t='+Date.now());
-  if(!res.ok)throw 0;
-  let j=await res.json(),arr=Array.isArray(j)?j:(j.quantitative||j.rows||j.data);
-  if(Array.isArray(arr)&&arr.length&&arr[0].task){
-   DATA=arr;syncText.textContent='Google Sheets · 정량실적 LIVE';
-   summarize();fillFilters();render();return;
+
+function qPick(o,keys){
+  for(const k of keys){
+    if(o && o[k]!==undefined && o[k]!==null && o[k]!=='') return o[k];
   }
-  syncText.textContent='Google Sheets 연결 확인 필요';
- }catch(e){syncText.textContent='Google Sheets 연결 확인 필요'}
+  return null;
+}
+function qNum(v){
+  if(v===null||v===undefined||v==='') return null;
+  if(typeof v==='number') return v;
+  const x=parseFloat(String(v).replace(/[,%\s]/g,''));
+  return Number.isFinite(x)?x:null;
+}
+function normalizeQuantApiRow(o){
+  // 이미 화면용 형식이면 그대로 보정
+  if(o && o.task!==undefined){
+    const target=qNum(o.target);
+    const actual=qNum(o.actual)??0;
+    const rate=qNum(o.rate) ?? (target>0 ? actual/target*100 : 0);
+    return {...o,target,actual,rate,orgs:Array.isArray(o.orgs)?o.orgs:[]};
+  }
+
+  const target=qNum(qPick(o,['목표값','목푯값','target','goal']));
+  const actual=qNum(qPick(o,['달성값','실적','actual','result']))??0;
+  const rate=qNum(qPick(o,['달성률','rate'])) ?? (target>0 ? actual/target*100 : 0);
+
+  const orgMap=[
+    {name:'대구보건대학교', keys:['대구','실적값1','DHC']},
+    {name:'계명대학교', keys:['계대','실적값2','KMU']},
+    {name:'영진전문대학교', keys:['영진','실적값3','YJU']},
+    {name:'대구과학대학교', keys:['과학','실적값4','DGC']},
+    {name:'안광학산업진흥원', keys:['안광학','실적값5']}
+  ];
+
+  const orgs=orgMap.map((u,i)=>{
+    const actualVal=qNum(qPick(o,u.keys));
+    // API가 대학별 목푯값을 별도 제공하면 사용, 없으면 실제값 존재 여부만 표시
+    const targetVal=qNum(qPick(o,[
+      u.name+' 목표',u.name+' 목푯값',
+      '목표값'+(i+1),'목푯값'+(i+1),'target'+(i+1)
+    ]));
+    if(actualVal===null && targetVal===null) return null;
+    return {name:u.name,target:targetVal,actual:actualVal};
+  }).filter(Boolean);
+
+  return {
+    row:qNum(qPick(o,['row','행','행번호']))||0,
+    task:String(qPick(o,['단위과제','task','taskCode'])||'').trim(),
+    taskName:String(qPick(o,['단위과제명','taskName','과제명'])||'').trim(),
+    exec:String(qPick(o,['단위과제 실행내용','실행내용','execution','exec'])||'').trim(),
+    detail:String(qPick(o,['단위과제 세부 실적','세부실적','세부 실적','detail'])||'').trim(),
+    target,actual,rate,
+    dept:String(qPick(o,['담당부서','dept'])||'').trim(),
+    definition:String(qPick(o,['실적정의','definition'])||'').trim(),
+    orgs
+  };
+}
+function extractQuantApiRows(payload){
+  let a=payload;
+  if(!Array.isArray(a)){
+    a=payload?.quantitative || payload?.quantitativeRows || payload?.rows || payload?.data || payload?.items || [];
+  }
+  if(a && Array.isArray(a.rows)) a=a.rows;
+  return Array.isArray(a)?a:[];
+}
+
+async function loadLive(){
+  const syncText=document.getElementById('syncText');
+  const liveText=document.getElementById('liveText');
+  if(syncText) syncText.textContent='최신 데이터를 확인하고 있습니다';
+  if(liveText) liveText.textContent='Google Sheets 연결 중';
+
+  try{
+    const url=API_URL
+      +'?view=quantitative'
+      +'&sheet='+encodeURIComponent('정량실적')
+      +'&_='+Date.now();
+
+    const res=await fetch(url,{cache:'no-store',redirect:'follow'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+
+    const payload=await res.json();
+    const raw=extractQuantApiRows(payload);
+    const arr=raw
+      .map(normalizeQuantApiRow)
+      .filter(r=>r.task && r.exec && r.target!==null && r.target>0);
+
+    if(!arr.length) throw new Error('정량실적 데이터 0건 또는 API 형식 불일치');
+
+    DATA=arr;
+    if(liveText) liveText.textContent='Google Sheets LIVE 연동';
+    if(syncText){
+      const lastUpdated=payload?.meta?.lastUpdated||payload?.lastUpdated||payload?.updatedAt||'';
+      syncText.textContent=lastUpdated ? '최종 데이터 기준 · '+lastUpdated : '정량실적 실시간 연동';
+    }
+    summarize();
+    fillFilters();
+    render();
+  }catch(e){
+    console.error('정량실적 Google Sheets 연동 실패',e);
+    DATA=FALLBACK;
+    if(liveText) liveText.textContent='Google Sheets 연결 확인 필요';
+    if(syncText) syncText.textContent='정량실적 API 연결 실패 · 저장 데이터 표시';
+    summarize();
+    fillFilters();
+    render();
+  }
 }
 document.addEventListener('DOMContentLoaded',()=>{
  fillFilters();summarize();render();

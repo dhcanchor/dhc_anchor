@@ -1394,9 +1394,9 @@ body{
     </div>
   </header>
   <nav class="global-master-nav" aria-label="성과관리 메뉴">
-  <a class="active" href="./main_v3.html?v=20260918c">통합현황</a>
-  <a href="./performance_v3.html?v=20260918c">성과지표 관리</a>
-  <a href="./quantitative_v3.html?v=20260918c">정량실적 관리</a>
+  <a class="active" href="./main_v3.html?v=20260918d">통합현황</a>
+  <a href="./performance_v3.html?v=20260918d">성과지표 관리</a>
+  <a href="./quantitative_v3.html?v=20260918d">정량실적 관리</a>
 </nav>
 </div>
 
@@ -1422,7 +1422,7 @@ body{
             <div class="module-sub">핵심·자율지표 달성현황 및 관리대상 요약</div>
           </div>
         </div>
-        <a class="detail" href="./performance_v3.html?v=20260918c">자세히 보기 →</a>
+        <a class="detail" href="./performance_v3.html?v=20260918d">자세히 보기 →</a>
       </div>
 
       <div class="kpis">
@@ -1506,7 +1506,7 @@ body{
             <div class="module-sub">단위과제·대학별 목표 대비 정량실적 현황 <span class="mode-chip" id="qMode">연결 중</span></div>
           </div>
         </div>
-        <a class="detail" href="./quantitative_v3.html?v=20260918c">자세히 보기 →</a>
+        <a class="detail" href="./quantitative_v3.html?v=20260918d">자세히 보기 →</a>
       </div>
 
       <div class="kpis">
@@ -1870,7 +1870,7 @@ function renderQuant(){
 async function loadQuant(force=false){
   try{
     const sep=QUANT_CONFIG.query.includes('?')?'&':'?';
-    const res=await fetch(QUANT_CONFIG.api+QUANT_CONFIG.query+(force?sep+'_='+Date.now():''),{cache:'no-store'});
+    const res=await fetch(QUANT_CONFIG.api+QUANT_CONFIG.query+(force?sep+'_='+Date.now():''),{cache:'no-store',redirect:'follow'});
     if(!res.ok) throw new Error('HTTP '+res.status);
     const payload=await res.json();
     const raw=extractQuant(payload);
@@ -1889,20 +1889,20 @@ async function loadQuant(force=false){
 
 function updateHeader(){
   const perfLive=sourceState.perf==='live', quantLive=sourceState.quant==='live';
-  const pill=$('livePill'), dot=$('liveDot'), text=$('liveText');
+  const text=$('liveText');
   if(perfLive&&quantLive){
-    
-    text.textContent='Google Sheets 연결 중';
+    text.textContent='Google Sheets LIVE 연동';
   }else if(perfLive||quantLive){
-    
-    text.textContent='Google Sheets 연결 중';
+    text.textContent='일부 데이터 LIVE';
   }else{
-    
     text.textContent='Google Sheets 연결 확인 필요';
   }
   const dates=[sourceState.perfUpdated,sourceState.quantUpdated].filter(Boolean);
-  $('updatedText').textContent=dates.length?'최종 데이터 기준 · '+dates.sort().slice(-1)[0]:
-    (perfLive||quantLive?'최신 데이터 연동 상태 확인':'연결 실패 시 소스 내 Snapshot/화면예시 데이터 표시');
+  $('updatedText').textContent=dates.length
+    ? '최종 데이터 기준 · '+dates.sort().slice(-1)[0]
+    : (perfLive&&quantLive ? '성과지표 · 정량실적 실시간 연동'
+      : (perfLive||quantLive ? '일부 데이터만 실시간 연동 중'
+      : '연결 실패 시 Snapshot/화면예시 데이터 표시'));
 }
 
 async function loadAll(force=false){

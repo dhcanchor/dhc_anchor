@@ -1762,9 +1762,9 @@ body{
     </div>
   </header>
   <nav class="global-master-nav" aria-label="성과관리 메뉴">
-  <a href="./main_v3.html?v=20260918c">통합현황</a>
-  <a class="active" href="./performance_v3.html?v=20260918c">성과지표 관리</a>
-  <a href="./quantitative_v3.html?v=20260918c">정량실적 관리</a>
+  <a href="./main_v3.html?v=20260918d">통합현황</a>
+  <a class="active" href="./performance_v3.html?v=20260918d">성과지표 관리</a>
+  <a href="./quantitative_v3.html?v=20260918d">정량실적 관리</a>
 </nav>
 </div>
 
@@ -2253,7 +2253,7 @@ function setLiveState(ok, source='', lastUpdated=''){
   const live=document.querySelector('.live');
   if(ok){
     live?.classList.remove('live-fallback');
-    $('liveText').textContent='Google Sheets 연결 중';
+    $('liveText').textContent='Google Sheets LIVE 연동';
     const d=formatDashboardDate(lastUpdated);
     $('updatedText').textContent=d && d!=='-' ? `${source} · 최종 데이터 수정 ${d}` : source;
   }else{
