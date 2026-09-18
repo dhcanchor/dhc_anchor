@@ -612,9 +612,9 @@ body{
     </div>
   </header>
   <nav class="global-master-nav" aria-label="성과관리 메뉴">
-  <a href="./main_v3.html?v=20260918i">통합현황</a>
-  <a href="./performance_v3.html?v=20260918i">성과지표 관리</a>
-  <a class="active" href="./quantitative_v3.html?v=20260918i">정량실적 관리</a>
+  <a href="./main_v3.html?v=20260918j">통합현황</a>
+  <a href="./performance_v3.html?v=20260918j">성과지표 관리</a>
+  <a class="active" href="./quantitative_v3.html?v=20260918j">정량실적 관리</a>
 </nav>
 </div>
 <div class="wrap">
@@ -635,13 +635,48 @@ body{
 let DATA=FALLBACK;
 
 /* LIVE 데이터에 대학별 목표값이 없더라도 원본 사업구조의 참여대학·기관 정보를 유지 */
+const _circledTaskDigits={
+  '①':'1','②':'2','③':'3','④':'4','⑤':'5','⑥':'6','⑦':'7','⑧':'8','⑨':'9','⑩':'10',
+  '⑪':'11','⑫':'12','⑬':'13','⑭':'14','⑮':'15','⑯':'16','⑰':'17','⑱':'18','⑲':'19','⑳':'20'
+};
+function _canonTaskCode(v){
+  return String(v||'').trim().replace(/[①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳]/g,m=>_circledTaskDigits[m]||m);
+}
 function _orgKey(task,exec){
-  return String(task||'').trim()+'||'+String(exec||'').trim();
+  return _canonTaskCode(task)+'||'+String(exec||'').trim();
 }
 
 const _fallbackTaskNameMap=new Map(
-  FALLBACK.filter(r=>r.task && r.taskName).map(r=>[r.task,r.taskName])
+  FALLBACK
+    .filter(r=>r.task && r.taskName)
+    .map(r=>[_canonTaskCode(r.task),r.taskName])
 );
+
+/* 단위과제 전체 참여기관: 개별 실적 중 한 항목에만 참여하는 기관도 상단에 표시 */
+const _fallbackTaskOrgMap=new Map();
+FALLBACK.forEach(r=>{
+  const key=_canonTaskCode(r.task);
+  if(!key)return;
+  if(!_fallbackTaskOrgMap.has(key))_fallbackTaskOrgMap.set(key,new Set());
+  (r.orgs||[]).forEach(o=>{
+    if(o && o.name && (o.target!=null || o.actual!=null)){
+      _fallbackTaskOrgMap.get(key).add(o.name);
+    }
+  });
+});
+
+function _displayTaskName(task,liveName){
+  const raw=String(liveName||'').trim();
+  const fallback=_fallbackTaskNameMap.get(_canonTaskCode(task))||'';
+
+  /* API가 단위과제명 자리에 1-①, 3-③ 같은 코드를 다시 넘기면 원래 단위과제명 사용 */
+  const canonRaw=_canonTaskCode(raw);
+  const canonTask=_canonTaskCode(task);
+  const codeLike=/^\d+\-\d+(?:\([^)]+\))?$/.test(canonRaw);
+
+  if(!raw || canonRaw===canonTask || codeLike)return fallback||raw;
+  return raw;
+}
 
 const _fallbackOrgMap=new Map(
   FALLBACK.map(r=>[
@@ -688,7 +723,8 @@ function _mergeOrgs(task,exec,liveOrgs){
 
 function _normalizeLiveRow(o){
   const task=String(_pick(o,['task','단위과제','taskCode'])||'').trim();
-  const taskName=String(_pick(o,['taskName','단위과제명','과제명'])||_fallbackTaskNameMap.get(task)||'').trim();
+  const liveTaskName=String(_pick(o,['taskName','단위과제명','과제명'])||'').trim();
+  const taskName=_displayTaskName(task,liveTaskName);
   const exec=String(_pick(o,['exec','execution','단위과제 실행내용','실행내용'])||'').trim();
   const detail=String(_pick(o,['detail','단위과제 세부 실적','세부실적','세부 실적'])||'').trim();
   const target=_num(_pick(o,['target','목푯값','목표값','goal']));
@@ -720,9 +756,44 @@ function status(rate){if(rate>=100)return['good','달성'];if(rate>=70)return['a
 function fmt(v){return(v===null||v===undefined||v==='')?'-':(Number.isInteger(+v)?(+v).toLocaleString():Number(v).toLocaleString(undefined,{maximumFractionDigits:1}))}
 function summarize(){let c={good:0,attn:0,manage:0,risk:0};DATA.forEach(r=>c[status(r.rate)[0]]++);totalN.textContent=DATA.length+'건';goodN.textContent=c.good+'건';attnN.textContent=c.attn+'건';manageN.textContent=c.manage+'건';riskN.textContent=c.risk+'건'}
 function groups(){let g={};DATA.forEach(r=>(g[r.task]??=[]).push(r));return g}
-function logoHtml(rows){let used=new Set();rows.forEach(r=>(r.orgs||[]).forEach(o=>{if(o.target!=null || o.actual!=null)used.add(o.name)}));return ORGS.filter(o=>used.has(o.name)).map(o=>`<span class="badge" title="${o.name}"><img src="${o.img}" alt="${o.name}"><span class="badge-name">${o.name}</span></span>`).join('')||'<span class="dash">-</span>'}
+function logoHtml(rows){
+  const used=new Set();
+
+  rows.forEach(r=>(r.orgs||[]).forEach(o=>{
+    if(o && o.name && (o.target!=null || o.actual!=null))used.add(o.name);
+  }));
+
+  /* LIVE 행 매칭이 일부 달라도 원본 단위과제 참여기관은 유지 */
+  if(rows.length){
+    const taskKey=_canonTaskCode(rows[0].task);
+    const fallbackSet=_fallbackTaskOrgMap.get(taskKey);
+    if(fallbackSet)fallbackSet.forEach(name=>used.add(name));
+  }
+
+  return ORGS
+    .filter(o=>used.has(o.name))
+    .map(o=>`<span class="badge" title="${o.name}"><img src="${o.img}" alt="${o.name}"><span class="badge-name">${o.name}</span></span>`)
+    .join('')||'<span class="dash">-</span>';
+}
 function depts(rows){let d=[...new Set(rows.map(r=>r.dept).filter(Boolean))];return d.length?d.join(', '):'-'}
-function orgCards(rows){let used=new Set();rows.forEach(r=>(r.orgs||[]).forEach(o=>{if(o.target!=null || o.actual!=null)used.add(o.name)}));return ORGS.filter(o=>used.has(o.name)).map(o=>`<div class="orgcard"><img src="${o.img}"><span>${o.name}</span></div>`).join('')}
+function orgCards(rows){
+  const used=new Set();
+
+  rows.forEach(r=>(r.orgs||[]).forEach(o=>{
+    if(o && o.name && (o.target!=null || o.actual!=null))used.add(o.name);
+  }));
+
+  if(rows.length){
+    const taskKey=_canonTaskCode(rows[0].task);
+    const fallbackSet=_fallbackTaskOrgMap.get(taskKey);
+    if(fallbackSet)fallbackSet.forEach(name=>used.add(name));
+  }
+
+  return ORGS
+    .filter(o=>used.has(o.name))
+    .map(o=>`<div class="orgcard"><img src="${o.img}" alt="${o.name}"><span>${o.name}</span></div>`)
+    .join('');
+}
 function cellOrg(r,o){let x=(r.orgs||[]).find(z=>z.name===o.name&&(z.target!=null || z.actual!=null));if(!x)return'<span class="dash">-</span>';return`<span class="orgmetric"><span class="t">목푯값 <strong>${fmt(x.target)}</strong></span><span class="a">실적값 <strong>${fmt(x.actual)}</strong></span></span>`}
 function currentFilters(){
  return{
@@ -766,7 +837,7 @@ function taskOverviewHtml(rows){
 function render(){
  let G=filteredGroups(),out='';
  Object.entries(G).forEach(([code,rows])=>{
-  out+=`<div class="task"><div class="taskrow" onclick="this.parentElement.classList.toggle('open')"><div class="chev">›</div><div class="taskcode">${code}</div><div class="taskname">${rows[0].taskName||''}</div><div class="count"><b>${rows.length}</b>건</div><div class="orglogos">${logoHtml(rows)}</div><div class="deptsum">${depts(rows)}</div><div>⌄</div></div><div class="detailbox"><div class="detailtop"><div class="info"><h3>단위과제 개요</h3><b>${code} ${rows[0].taskName||_fallbackTaskNameMap.get(code)||''}</b>${taskOverviewHtml(rows)}<div class="task-overview-summary">관리 정량실적 ${rows.length}건 · 개별 실적 중심 관리</div></div><div class="info"><h3>참여대학 및 기관</h3><div class="orgcards">${orgCards(rows)}</div></div></div><div class="tablewrap"><table><thead><tr><th>No.</th><th>단위과제 실행내용</th><th>세부실적</th><th class="metricHead">목푯값</th><th class="metricHead">실적값</th><th class="metricHead">달성률</th>${ORGS.map(o=>`<th class="orghead" title="${o.name}"><img src="${o.img}" alt="${o.name}"></th>`).join('')}<th>담당부서</th><th>실적정의</th></tr></thead><tbody>${rows.map((r,i)=>{let st=status(r.rate)[0];return`<tr><td>${i+1}</td><td class="exec">${r.exec}</td><td>${r.detail||'-'}</td><td class="metric">${fmt(r.target)}</td><td class="metric">${fmt(r.actual)}</td><td class="rate ${st}">${r.rate==null?'-':r.rate.toFixed(1)+'%'}</td>${ORGS.map(o=>`<td class="orgval">${cellOrg(r,o)}</td>`).join('')}<td>${r.dept||'-'}</td><td>${r.definition||'-'}</td></tr>`}).join('')}</tbody></table></div></div></div>`;
+  out+=`<div class="task"><div class="taskrow" onclick="this.parentElement.classList.toggle('open')"><div class="chev">›</div><div class="taskcode">${code}</div><div class="taskname">${_displayTaskName(code,rows[0].taskName)}</div><div class="count"><b>${rows.length}</b>건</div><div class="orglogos">${logoHtml(rows)}</div><div class="deptsum">${depts(rows)}</div><div>⌄</div></div><div class="detailbox"><div class="detailtop"><div class="info"><h3>단위과제 개요</h3><b>${code} ${_displayTaskName(code,rows[0].taskName)}</b>${taskOverviewHtml(rows)}<div class="task-overview-summary">관리 정량실적 ${rows.length}건 · 개별 실적 중심 관리</div></div><div class="info"><h3>참여대학 및 기관</h3><div class="orgcards">${orgCards(rows)}</div></div></div><div class="tablewrap"><table><thead><tr><th>No.</th><th>단위과제 실행내용</th><th>세부실적</th><th class="metricHead">목푯값</th><th class="metricHead">실적값</th><th class="metricHead">달성률</th>${ORGS.map(o=>`<th class="orghead" title="${o.name}"><img src="${o.img}" alt="${o.name}"></th>`).join('')}<th>담당부서</th><th>실적정의</th></tr></thead><tbody>${rows.map((r,i)=>{let st=status(r.rate)[0];return`<tr><td>${i+1}</td><td class="exec">${r.exec}</td><td>${r.detail||'-'}</td><td class="metric">${fmt(r.target)}</td><td class="metric">${fmt(r.actual)}</td><td class="rate ${st}">${r.rate==null?'-':r.rate.toFixed(1)+'%'}</td>${ORGS.map(o=>`<td class="orgval">${cellOrg(r,o)}</td>`).join('')}<td>${r.dept||'-'}</td><td>${r.definition||'-'}</td></tr>`}).join('')}</tbody></table></div></div></div>`;
  });
  document.getElementById('tasks').innerHTML=out||'<div style="padding:40px;text-align:center;color:#8493a4">조건에 해당하는 정량실적이 없습니다.</div>';
 }
@@ -777,7 +848,7 @@ function fillFilters(){
 
  /* 원본 화면의 5개 대학·기관을 항상 유지 */
  const orgs=ORGS.map(o=>o.name);
- const tasks=[...new Map(DATA.map(r=>[r.task,r.taskName])).entries()];
+ const tasks=[...new Map(DATA.map(r=>[r.task,_displayTaskName(r.task,r.taskName)])).entries()];
  const depts=[...new Set(DATA.map(r=>r.dept).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'));
 
  orgSel.innerHTML='<option value="">대학 및 기관 선택</option>'+
