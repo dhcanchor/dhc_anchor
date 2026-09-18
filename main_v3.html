@@ -1784,81 +1784,99 @@ async function loadPerformance(force=false){
 /* Quantitative - source-compatible normalize/extract */
 function pick(o,keys){for(const k of keys){if(o&&o[k]!==undefined&&o[k]!==null&&o[k]!=='')return o[k]}return null}
 function n(v){if(v===null||v===undefined||v==='')return null;if(typeof v==='number')return v;const x=parseFloat(String(v).replace(/[,%\s]/g,''));return Number.isFinite(x)?x:null}
+function _rawField(o,keys){
+  for(const k of keys){
+    if(o && Object.prototype.hasOwnProperty.call(o,k)){
+      return {exists:true,value:o[k]};
+    }
+  }
+  return {exists:false,value:null};
+}
+function _enteredValue(meta){
+  if(!meta || !meta.exists) return false;
+  const v=meta.value;
+  return !(v===null || v===undefined || String(v).trim()==='');
+}
 function normalizeQuant(o){
   const target=n(pick(o,['목표값','목푯값','target','goal']));
 
-  /* 전체 정량실적의 실제 입력 여부 */
-  const actualSource=pick(o,['달성값','실적','actual','result']);
-  const actualRaw=n(actualSource);
+  /* 전체 달성값: 정량실적 KPI/달성률 계산용 */
+  const actualSource=_rawField(o,['달성값','실적','actual','result']);
+  const actualRaw=n(actualSource.value);
   const actual=actualRaw??0;
-  const actualEntered=actualSource!==null && actualSource!==undefined && String(actualSource).trim()!=='';
+  const actualEntered=_enteredValue(actualSource);
 
   /*
-    대학별 실적은 orgs[].actual의 '실제 입력 여부'를 따로 보관한다.
-    목표배분값(target)이나 대학 참여값은 실적 입력 건수로 계산하지 않는다.
+    대학별 열은 반드시 '목표값'과 '실적값'을 분리해 읽는다.
+    Google Sheet 기준:
+      I  대구      / J  실적값1
+      K  계대      / L  실적값2
+      M  영진      / N  실적값3
+      O  과학      / P  실적값4
   */
-  const orgs=Array.isArray(o?.orgs)
-    ? o.orgs.map(x=>{
-        const orgActualSource=pick(x,['actual','달성값','실적','result']);
-        return {
-          name:String(pick(x,['name','기관명','대학명','org'])||'').trim(),
-          target:n(pick(x,['target','목표값','목푯값','goal'])),
-          actual:n(orgActualSource),
-          actualEntered:orgActualSource!==null && orgActualSource!==undefined && String(orgActualSource).trim()!==''
-        };
-      }).filter(x=>x.name)
-    : [];
+  const univRaw={
+    대구:{
+      target:_rawField(o,['대구','대구목표','대구목푯값','DHC목표','DHC_target']),
+      actual:_rawField(o,['실적값1','대구실적값','대구실적','DHC실적','DHC_actual'])
+    },
+    계대:{
+      target:_rawField(o,['계대','계명','계대목표','계대목푯값','KMU목표','KMU_target']),
+      actual:_rawField(o,['실적값2','계대실적값','계명실적값','계대실적','KMU실적','KMU_actual'])
+    },
+    영진:{
+      target:_rawField(o,['영진','영진목표','영진목푯값','YJU목표','YJU_target']),
+      actual:_rawField(o,['실적값3','영진실적값','영진실적','YJU실적','YJU_actual'])
+    },
+    과학:{
+      target:_rawField(o,['과학','과학대','과학목표','과학목푯값','DGC목표','DGC_target']),
+      actual:_rawField(o,['실적값4','과학실적값','과학대실적값','과학실적','DGC실적','DGC_actual'])
+    }
+  };
+
+  const universityTargets={};
+  const universityActuals={};
+  const universityEntered={};
+
+  Object.keys(univRaw).forEach(k=>{
+    universityTargets[k]=n(univRaw[k].target.value);
+    universityActuals[k]=n(univRaw[k].actual.value);
+    universityEntered[k]=_enteredValue(univRaw[k].actual);
+  });
 
   return {
     task:String(pick(o,['단위과제','task','taskCode'])||''),
     taskName:String(pick(o,['단위과제명','taskName','과제명'])||''),
     execution:String(pick(o,['단위과제 실행내용','실행내용','execution'])||''),
     detail:String(pick(o,['단위과제 세부 실적','세부실적','세부 실적','detail'])||''),
-    target,actual,actualEntered,orgs,
+    target,actual,actualEntered,
     dept:String(pick(o,['담당부서','dept'])||''),
     definition:String(pick(o,['실적정의','definition'])||''),
 
-    /* 아래 값은 참여대학/목표배분 판단용. 실적 입력 건수 계산에는 사용하지 않음 */
-    대구:n(pick(o,['대구','실적값1','DHC'])),
-    계대:n(pick(o,['계대','실적값2','KMU'])),
-    영진:n(pick(o,['영진','실적값3','YJU'])),
-    과학:n(pick(o,['과학','실적값4','DGC'])),
+    /* 대학별 목표/실적을 명시적으로 분리 저장 */
+    universityTargets,
+    universityActuals,
+    universityEntered,
+
+    /* 기존 분류 기능 호환을 위해 대학별 목표값을 유지 */
+    대구:universityTargets.대구,
+    계대:universityTargets.계대,
+    영진:universityTargets.영진,
+    과학:universityTargets.과학,
+
     date:String(pick(o,['최종업데이트','수정일','date'])||'')
   };
 }
-const QUANT_ORG_ALIASES={
-  '대구보건대학교':['대구보건대학교','대구보건대','대구보건','DHC'],
-  '계명대학교':['계명대학교','계명대','계대','KMU'],
-  '영진전문대학교':['영진전문대학교','영진전문대','영진','YJU'],
-  '대구과학대학교':['대구과학대학교','대구과학대','과학대','과학','DGC']
-};
-function quantOrgRecord(r,u){
-  const aliases=QUANT_ORG_ALIASES[u.name]||[u.name];
-  return (r.orgs||[]).find(o=>aliases.includes(String(o.name||'').trim()))||null;
+function quantUniversityTarget(r,u){
+  return r?.universityTargets?.[u.key] ?? null;
+}
+function quantUniversityActual(r,u){
+  return r?.universityActuals?.[u.key] ?? null;
+}
+function quantUniversityEntered(r,u){
+  return r?.universityEntered?.[u.key] === true;
 }
 function quantApplicableUniversities(r){
-  return QUANT_CONFIG.universities.filter(u=>{
-    const org=quantOrgRecord(r,u);
-    if(org && (org.target!==null || org.actualEntered)) return true;
-    return r[u.key]!==null;
-  });
-}
-function quantOrgEntered(r,u){
-  /* 전체 실적 자체가 미입력이면 대학별 입력으로 계산하지 않음 */
-  if(!r.actualEntered) return false;
-
-  const org=quantOrgRecord(r,u);
-
-  /* API가 대학별 actual을 명시적으로 주는 경우 */
-  if(org && org.actualEntered) return true;
-
-  /*
-    대학별 actual이 따로 없는 단독 수행 항목은
-    전체 actual 입력값을 해당 대학의 입력으로 인정.
-    컨소시엄 항목은 기관별 actual이 없으면 임의 배분하지 않음.
-  */
-  const applicable=quantApplicableUniversities(r);
-  return applicable.length===1 && applicable[0].name===u.name;
+  return QUANT_CONFIG.universities.filter(u=>quantUniversityTarget(r,u)!==null);
 }
 function extractQuant(payload){
   let a=payload;
@@ -1868,12 +1886,12 @@ function extractQuant(payload){
 }
 function quantRate(r){return r.target>0?r.actual/r.target*100:0}
 function quantTypeLabel(r){
-  const n=QUANT_CONFIG.universities.filter(u=>r[u.key]!==null).length;
-  if(n>1) return '<span class="type-chip consortium">컨소시엄</span>';
+  const univs=quantApplicableUniversities(r);
+  if(univs.length>1) return '<span class="type-chip consortium">컨소시엄</span>';
   return '<span class="type-chip">단독</span>';
 }
 function quantUniversityChip(r){
-  const univs=QUANT_CONFIG.universities.filter(u=>r[u.key]!==null);
+  const univs=quantApplicableUniversities(r);
   if(!univs.length) return '<span class="univ-chip text-only">-</span>';
   if(univs.length===1){
     const u=univs[0];
@@ -1894,18 +1912,13 @@ function renderQuant(){
   $('qLegend').innerHTML=legendHtml(c,total,'blue');
 
   /* 대학별 정량실적 현황
-     - 분모: 해당 대학·기관에 목표가 배분된 관리 대상 항목
-     - 분자: orgs[].actual에 실제 값이 입력된 항목
-     - 0을 직접 입력한 경우도 '입력'으로 인정
-     - 목표배분값을 실적값으로 오인하지 않도록 기존 r[u.key]는 분모 보조판정에만 사용
+     - 분모: 대학별 목표값(I/K/M/O)이 있는 항목
+     - 분자: 대학별 실적값(J/L/N/P)에 실제 값이 입력된 항목
+     - 목표값을 실적 입력으로 절대 계산하지 않음
   */
   const stats=QUANT_CONFIG.universities.map(u=>{
-    /* 분모: 해당 대학에 목표가 배분된 항목 */
-    const applicable=rows.filter(r=>quantApplicableUniversities(r).some(x=>x.name===u.name));
-
-    /* 분자: 실제 실적값이 입력된 항목만 */
-    const entered=applicable.filter(r=>quantOrgEntered(r,u)).length;
-
+    const applicable=rows.filter(r=>quantUniversityTarget(r,u)!==null);
+    const entered=applicable.filter(r=>quantUniversityEntered(r,u)).length;
     const rate=applicable.length?entered/applicable.length*100:0;
     return {...u,applicable:applicable.length,entered,rate};
   });
