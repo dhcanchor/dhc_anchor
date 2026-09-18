@@ -1786,20 +1786,27 @@ function pick(o,keys){for(const k of keys){if(o&&o[k]!==undefined&&o[k]!==null&&
 function n(v){if(v===null||v===undefined||v==='')return null;if(typeof v==='number')return v;const x=parseFloat(String(v).replace(/[,%\s]/g,''));return Number.isFinite(x)?x:null}
 function normalizeQuant(o){
   const target=n(pick(o,['목표값','목푯값','target','goal']));
-  const actualRaw=n(pick(o,['달성값','실적','actual','result']));
+
+  /* 전체 정량실적의 실제 입력 여부 */
+  const actualSource=pick(o,['달성값','실적','actual','result']);
+  const actualRaw=n(actualSource);
   const actual=actualRaw??0;
+  const actualEntered=actualSource!==null && actualSource!==undefined && String(actualSource).trim()!=='';
 
   /*
-    대학별 실적은 API의 orgs[].actual을 기준으로 판정한다.
-    기존의 대구/계대/영진/과학 값은 참여대학·목표배분 정보일 수 있으므로
-    '실적값 입력 여부' 판정에는 사용하지 않는다.
+    대학별 실적은 orgs[].actual의 '실제 입력 여부'를 따로 보관한다.
+    목표배분값(target)이나 대학 참여값은 실적 입력 건수로 계산하지 않는다.
   */
   const orgs=Array.isArray(o?.orgs)
-    ? o.orgs.map(x=>({
-        name:String(x?.name||'').trim(),
-        target:n(x?.target),
-        actual:n(x?.actual)
-      })).filter(x=>x.name)
+    ? o.orgs.map(x=>{
+        const orgActualSource=pick(x,['actual','달성값','실적','result']);
+        return {
+          name:String(pick(x,['name','기관명','대학명','org'])||'').trim(),
+          target:n(pick(x,['target','목표값','목푯값','goal'])),
+          actual:n(orgActualSource),
+          actualEntered:orgActualSource!==null && orgActualSource!==undefined && String(orgActualSource).trim()!==''
+        };
+      }).filter(x=>x.name)
     : [];
 
   return {
@@ -1807,10 +1814,11 @@ function normalizeQuant(o){
     taskName:String(pick(o,['단위과제명','taskName','과제명'])||''),
     execution:String(pick(o,['단위과제 실행내용','실행내용','execution'])||''),
     detail:String(pick(o,['단위과제 세부 실적','세부실적','세부 실적','detail'])||''),
-    target,actual,actualEntered:actualRaw!==null,orgs,
+    target,actual,actualEntered,orgs,
     dept:String(pick(o,['담당부서','dept'])||''),
     definition:String(pick(o,['실적정의','definition'])||''),
-    /* 아래 값은 참여기관/분류 표시용으로만 유지 */
+
+    /* 아래 값은 참여대학/목표배분 판단용. 실적 입력 건수 계산에는 사용하지 않음 */
     대구:n(pick(o,['대구','실적값1','DHC'])),
     계대:n(pick(o,['계대','실적값2','KMU'])),
     영진:n(pick(o,['영진','실적값3','YJU'])),
@@ -1818,7 +1826,6 @@ function normalizeQuant(o){
     date:String(pick(o,['최종업데이트','수정일','date'])||'')
   };
 }
-
 const QUANT_ORG_ALIASES={
   '대구보건대학교':['대구보건대학교','대구보건대','대구보건','DHC'],
   '계명대학교':['계명대학교','계명대','계대','KMU'],
@@ -1828,6 +1835,30 @@ const QUANT_ORG_ALIASES={
 function quantOrgRecord(r,u){
   const aliases=QUANT_ORG_ALIASES[u.name]||[u.name];
   return (r.orgs||[]).find(o=>aliases.includes(String(o.name||'').trim()))||null;
+}
+function quantApplicableUniversities(r){
+  return QUANT_CONFIG.universities.filter(u=>{
+    const org=quantOrgRecord(r,u);
+    if(org && (org.target!==null || org.actualEntered)) return true;
+    return r[u.key]!==null;
+  });
+}
+function quantOrgEntered(r,u){
+  /* 전체 실적 자체가 미입력이면 대학별 입력으로 계산하지 않음 */
+  if(!r.actualEntered) return false;
+
+  const org=quantOrgRecord(r,u);
+
+  /* API가 대학별 actual을 명시적으로 주는 경우 */
+  if(org && org.actualEntered) return true;
+
+  /*
+    대학별 actual이 따로 없는 단독 수행 항목은
+    전체 actual 입력값을 해당 대학의 입력으로 인정.
+    컨소시엄 항목은 기관별 actual이 없으면 임의 배분하지 않음.
+  */
+  const applicable=quantApplicableUniversities(r);
+  return applicable.length===1 && applicable[0].name===u.name;
 }
 function extractQuant(payload){
   let a=payload;
@@ -1869,15 +1900,12 @@ function renderQuant(){
      - 목표배분값을 실적값으로 오인하지 않도록 기존 r[u.key]는 분모 보조판정에만 사용
   */
   const stats=QUANT_CONFIG.universities.map(u=>{
-    const applicable=rows.filter(r=>{
-      const org=quantOrgRecord(r,u);
-      return !!org && (org.target!==null || org.actual!==null)
-        || (!r.orgs?.length && r[u.key]!==null);
-    });
-    const entered=applicable.filter(r=>{
-      const org=quantOrgRecord(r,u);
-      return !!org && org.actual!==null;
-    }).length;
+    /* 분모: 해당 대학에 목표가 배분된 항목 */
+    const applicable=rows.filter(r=>quantApplicableUniversities(r).some(x=>x.name===u.name));
+
+    /* 분자: 실제 실적값이 입력된 항목만 */
+    const entered=applicable.filter(r=>quantOrgEntered(r,u)).length;
+
     const rate=applicable.length?entered/applicable.length*100:0;
     return {...u,applicable:applicable.length,entered,rate};
   });
