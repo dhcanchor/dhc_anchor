@@ -1376,6 +1376,68 @@ body{
 }
 </style>
 
+
+<!-- Excel download: browser-side XLSX generation -->
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<style id="excel-download-v2">
+  /* 엑셀 다운로드: 상단 메뉴 우측 배치 */
+  .global-master-nav{position:relative!important;display:grid!important;grid-template-columns:1fr auto 1fr!important;overflow:visible!important}
+  .nav-menu{grid-column:2;display:flex;align-items:center;justify-content:center;gap:8px;min-width:0}
+  .nav-download-actions{grid-column:3;justify-self:end;display:flex;align-items:center;gap:7px;min-width:0}
+  .excel-download-btn{
+    height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 11px;
+    border:1px solid #D6E4DA;border-radius:11px;background:#fff;color:#173F2A;
+    font-size:10.5px;font-weight:800;box-shadow:0 3px 10px rgba(20,35,55,.035);
+    transition:.16s ease;white-space:nowrap
+  }
+  .excel-download-btn:hover{transform:translateY(-1px);border-color:#9EC8AA;background:#F7FCF8;box-shadow:0 5px 14px rgba(33,115,70,.10)}
+  .excel-download-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .excel-icon{width:27px;height:27px;display:grid;place-items:center;flex:none}
+  .excel-icon svg{width:27px;height:27px;display:block}
+  .excel-btn-text{display:grid;gap:1px;text-align:left;line-height:1.12}
+  .excel-btn-text b{font-size:10.5px;color:#173F2A}
+  .excel-btn-text small{font-size:8px;color:#789082;font-weight:700}
+  .download-state{display:none}
+
+  .download-modal{
+    position:fixed;inset:0;z-index:12000;display:none;align-items:center;justify-content:center;
+    padding:18px;background:rgba(15,39,71,.38);backdrop-filter:blur(3px)
+  }
+  .download-modal.show{display:flex}
+  .download-dialog{width:min(430px,100%);background:#fff;border:1px solid #DDE4EB;border-radius:20px;box-shadow:0 24px 70px rgba(15,39,71,.24);padding:22px}
+  .download-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:15px}
+  .download-dialog-title{display:flex;align-items:center;gap:11px}
+  .download-dialog-title .excel-icon{width:40px;height:40px}
+  .download-dialog-title .excel-icon svg{width:40px;height:40px}
+  .download-dialog h3{margin:0;color:var(--navy);font-size:18px;font-weight:850;letter-spacing:-.035em}
+  .download-dialog p{margin:4px 0 0;color:#7A8797;font-size:10.5px;font-weight:650;line-height:1.5}
+  .download-close{border:0;background:#F3F6F9;color:#65758A;width:32px;height:32px;border-radius:9px;font-size:18px}
+  .download-label{display:block;margin:0 0 6px;color:#40536B;font-size:11px;font-weight:800}
+  .download-password{width:100%;height:46px;border:1px solid #DDE4EB;border-radius:13px;padding:0 13px;outline:0;color:#26364A;font-size:14px;font-weight:700;background:#fff}
+  .download-password:focus{border-color:#B40059;box-shadow:0 0 0 3px rgba(180,0,89,.07)}
+  .download-error{min-height:18px;margin:7px 0 2px;color:#D12C46;font-size:10px;font-weight:750}
+  .download-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+  .download-cancel,.download-confirm{height:40px;border-radius:11px;padding:0 15px;font-size:11px;font-weight:800}
+  .download-cancel{border:1px solid #DDE4EB;background:#fff;color:#53657B}
+  .download-confirm{border:0;background:linear-gradient(135deg,#6E0034,#B40059);color:#fff;min-width:92px}
+  .download-confirm:disabled{opacity:.55;cursor:wait}
+
+  @media(max-width:1180px){
+    .global-master-nav{height:auto!important;min-height:58px!important;grid-template-columns:1fr!important;gap:7px!important;padding:7px 8px!important}
+    .nav-menu{grid-column:1;justify-self:center}
+    .nav-download-actions{grid-column:1;justify-self:center}
+  }
+  @media(max-width:680px){
+    .global-master-nav{height:auto!important;min-height:0!important;overflow:visible!important}
+    .nav-menu{width:100%;overflow-x:auto;justify-content:flex-start;scrollbar-width:none}
+    .nav-menu::-webkit-scrollbar{display:none}
+    .nav-download-actions{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .excel-download-btn{width:100%;justify-content:center;padding:0 8px}
+    .excel-btn-text small{display:none}
+  }
+  @media(max-width:430px){.nav-download-actions{grid-template-columns:1fr}.excel-download-btn{justify-content:flex-start}}
+</style>
+
 </head>
 <body>
 <div class="global-top-shell">
@@ -1394,18 +1456,27 @@ body{
     </div>
   </header>
   <nav class="global-master-nav" aria-label="성과관리 메뉴">
-  <a class="active" href="./main_v3.html?v=20260918f">통합현황</a>
-  <a href="./performance_v3.html?v=20260918f">성과지표 관리</a>
-  <a href="./quantitative_v3.html?v=20260918f">정량실적 관리</a>
+  <div class="nav-menu">
+    <a class="active" href="./main_v3.html?v=20260922b">통합현황</a>
+    <a href="./performance_v3.html?v=20260918f">성과지표 관리</a>
+    <a href="./quantitative_v3.html?v=20260918f">정량실적 관리</a>
+  </div>
+  <div class="nav-download-actions" id="excelDownloads" aria-label="엑셀 다운로드">
+    <button type="button" class="excel-download-btn" data-download="department" aria-label="부서관리용 엑셀 다운로드" title="부서관리용 엑셀 다운로드">
+      <span class="excel-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><rect x="10" y="4" width="18" height="24" rx="3" fill="#107C41"/><rect x="13" y="7" width="12" height="18" rx="1.6" fill="#21A366"/><path d="M13 11h12M13 16h12M13 21h12M17 7v18M21 7v18" stroke="#fff" stroke-width="1" opacity=".55"/><rect x="3" y="8" width="14" height="16" rx="2.4" fill="#185C37"/><path d="M6.8 12.1 9.5 16l-2.7 3.9h2.25l1.65-2.58 1.67 2.58h2.25L11.9 16l2.72-3.9h-2.25l-1.67 2.58-1.65-2.58H6.8Z" fill="#fff"/></svg></span>
+      <span class="excel-btn-text"><b>부서관리용 엑셀</b><small>2차년도 · 2개 시트</small></span>
+    </button>
+    <button type="button" class="excel-download-btn" data-download="tp" aria-label="대구TP 제출형 엑셀 다운로드" title="대구TP 제출형 엑셀 다운로드">
+      <span class="excel-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><rect x="10" y="4" width="18" height="24" rx="3" fill="#107C41"/><rect x="13" y="7" width="12" height="18" rx="1.6" fill="#21A366"/><path d="M13 11h12M13 16h12M13 21h12M17 7v18M21 7v18" stroke="#fff" stroke-width="1" opacity=".55"/><rect x="3" y="8" width="14" height="16" rx="2.4" fill="#185C37"/><path d="M6.8 12.1 9.5 16l-2.7 3.9h2.25l1.65-2.58 1.67 2.58h2.25L11.9 16l2.72-3.9h-2.25l-1.67 2.58-1.65-2.58H6.8Z" fill="#fff"/></svg></span>
+      <span class="excel-btn-text"><b>대구TP 제출형</b><small>2차년도 · 2개 시트</small></span>
+    </button>
+    <span class="download-state warn" id="downloadState">LIVE 데이터 확인 중</span>
+  </div>
 </nav>
 </div>
 
 <div class="app">
-  
-
-  
-
-  <section class="dashboard-grid">
+<section class="dashboard-grid">
     <!-- 성과지표 -->
     <article class="module perf">
       <div class="module-head">
@@ -1585,6 +1656,26 @@ body{
     </div>
     <div class="source-note">성과지표·정량실적 Google Sheets 연동 · 연결 실패 시 Snapshot/화면예시 데이터 표시</div>
   </footer>
+</div>
+
+
+<div class="download-modal" id="downloadModal" role="dialog" aria-modal="true" aria-labelledby="downloadModalTitle">
+  <div class="download-dialog">
+    <div class="download-dialog-head">
+      <div class="download-dialog-title">
+        <span class="excel-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><rect x="10" y="4" width="18" height="24" rx="3" fill="#107C41"/><rect x="13" y="7" width="12" height="18" rx="1.6" fill="#21A366"/><path d="M13 11h12M13 16h12M13 21h12M17 7v18M21 7v18" stroke="#fff" stroke-width="1" opacity=".55"/><rect x="3" y="8" width="14" height="16" rx="2.4" fill="#185C37"/><path d="M6.8 12.1 9.5 16l-2.7 3.9h2.25l1.65-2.58 1.67 2.58h2.25L11.9 16l2.72-3.9h-2.25l-1.67 2.58-1.65-2.58H6.8Z" fill="#fff"/></svg></span>
+        <div><h3 id="downloadModalTitle">엑셀 다운로드</h3><p id="downloadModalDesc">비밀번호 확인 후 파일을 생성합니다.</p></div>
+      </div>
+      <button type="button" class="download-close" id="downloadClose" aria-label="닫기">×</button>
+    </div>
+    <label class="download-label" for="downloadPassword">다운로드 비밀번호</label>
+    <input class="download-password" id="downloadPassword" type="password" autocomplete="off" placeholder="비밀번호 입력">
+    <div class="download-error" id="downloadError"></div>
+    <div class="download-dialog-actions">
+      <button type="button" class="download-cancel" id="downloadCancel">취소</button>
+      <button type="button" class="download-confirm" id="downloadConfirm">확인 및 다운로드</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1992,9 +2083,289 @@ async function loadAll(force=false){
   updateHeader();
 }
 
+
+/* =========================================================
+   2차년도 XLSX EXPORT
+   - 부서관리용: 상세 관리 열 + 대학별 정량 목표/실적
+   - 대구TP 제출형: 기존 제출서식의 열 구조를 2차년도 기준으로 재구성
+   - 정적 GitHub Pages 특성상 이 비밀번호는 "다운로드 UI 잠금" 용도입니다.
+     강한 접근통제가 필요하면 서버측 인증이 필요합니다.
+   ========================================================= */
+const DOWNLOAD_PASSWORD_SHA256='c664973701a253857721e6245d7afbee48e432a3e1d2ba0ade0e3c60d1f21ccf'; // 운영 비밀번호 SHA-256
+let pendingDownloadType=null;
+
+async function passwordMatches(value){
+  if(!window.crypto?.subtle) throw new Error('보안 확인 기능을 사용할 수 없는 브라우저입니다.');
+  const bytes=new TextEncoder().encode(String(value||''));
+  const digest=await crypto.subtle.digest('SHA-256',bytes);
+  const hex=[...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  return hex===DOWNLOAD_PASSWORD_SHA256;
+}
+
+function downloadDataReady(){
+  return sourceState.perf==='live' && sourceState.quant==='live';
+}
+function updateDownloadState(){
+  const el=$('downloadState');
+  if(!el) return;
+  const ready=downloadDataReady();
+  el.textContent=ready?'Google Sheets LIVE 데이터 기준':'LIVE 연결 후 다운로드 가능';
+  el.classList.toggle('warn',!ready);
+}
+function excelNumber(v){
+  if(v===null||v===undefined||v===''||Number.isNaN(Number(v))) return '';
+  return Number(v);
+}
+function excelPercentTextNumber(v){
+  if(v===null||v===undefined||v===''||Number.isNaN(Number(v))) return '';
+  return Number(v);
+}
+function shortUniversityName(name){
+  const s=String(name||'').trim();
+  if(s.includes('대구보건')) return '대구보건';
+  if(s.includes('계명')) return '계명';
+  if(s.includes('영진')) return '영진';
+  if(s.includes('과학')) return '대구과학';
+  return s||'-';
+}
+function exportPerfRows(){
+  return PERF.filter(r=>{
+    const y=String(r.연도??'2026');
+    return y==='' || y.includes('2026') || y.includes('2차');
+  });
+}
+function exportQuantRows(){ return QUANT.slice(); }
+function universityBreakdown(r){
+  return QUANT_CONFIG.universities.map(u=>{
+    const t=quantUniversityTarget(r,u);
+    if(t===null||t===undefined) return null;
+    const entered=quantUniversityEntered(r,u);
+    const a=entered?quantUniversityActual(r,u):null;
+    const av=(a===null||a===undefined)?'-':Number(a).toLocaleString('ko-KR',{maximumFractionDigits:2});
+    const tv=Number(t).toLocaleString('ko-KR',{maximumFractionDigits:2});
+    return `${shortUniversityName(u.name)} ${av}/${tv}`;
+  }).filter(Boolean).join(', ');
+}
+function exportStamp(){
+  const d=new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+function exportTimestamp(){
+  const d=new Date();
+  return d.toLocaleString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function borderStyle(){
+  const side={style:'thin',color:{argb:'FFDDE4EB'}};
+  return {top:side,left:side,bottom:side,right:side};
+}
+function styleTitleCell(cell,size=16){
+  cell.font={name:'맑은 고딕',size,bold:true,color:{argb:'FF0F2747'}};
+  cell.alignment={vertical:'middle',horizontal:'left'};
+}
+function styleHeaderRow(row,fill='FFB40059'){
+  row.height=31;
+  row.eachCell({includeEmpty:true},cell=>{
+    cell.font={name:'맑은 고딕',size:10,bold:true,color:{argb:'FFFFFFFF'}};
+    cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:fill}};
+    cell.alignment={vertical:'middle',horizontal:'center',wrapText:true};
+    cell.border=borderStyle();
+  });
+}
+function styleDataRows(ws,start,end,colCount){
+  for(let r=start;r<=end;r++){
+    const row=ws.getRow(r); row.height=27;
+    for(let c=1;c<=colCount;c++){
+      const cell=row.getCell(c);
+      cell.font={name:'맑은 고딕',size:9,color:{argb:'FF35495F'}};
+      cell.alignment={vertical:'middle',horizontal:c<=4?'left':'center',wrapText:true};
+      cell.border=borderStyle();
+      if(r%2===0) cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF9FBFC'}};
+    }
+  }
+}
+function styleRateCell(cell,rate){
+  if(rate===''||rate===null||rate===undefined) return;
+  const s=statusOf(rate);
+  const map={
+    '달성':['FFFBEAF2','FFB40059'],
+    '주의':['FFFFF0F6','FFC52769'],
+    '관리':['FFFFF3E7','FFB66813'],
+    '위험':['FFFFF0F3','FFC52752']
+  };
+  const [fill,font]=map[s];
+  cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:fill}};
+  cell.font={name:'맑은 고딕',size:9,bold:true,color:{argb:font}};
+  cell.numFmt='0.0"%"';
+}
+function setupSheet(ws,widths,headerRow=5,freezeColumns=0){
+  ws.columns=widths.map(w=>({width:w}));
+  ws.views=[{state:'frozen',xSplit:freezeColumns,ySplit:headerRow}];
+  ws.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:9,margins:{left:.25,right:.25,top:.4,bottom:.4,header:.2,footer:.2}};
+  ws.properties.defaultRowHeight=20;
+}
+function addSheetHeading(ws,title,subtitle,colCount){
+  ws.mergeCells(1,1,1,colCount);ws.getCell(1,1).value='대구보건대학교';styleTitleCell(ws.getCell(1,1),13);ws.getRow(1).height=23;
+  ws.mergeCells(2,1,2,colCount);ws.getCell(2,1).value=title;styleTitleCell(ws.getCell(2,1),16);ws.getRow(2).height=29;
+  ws.mergeCells(3,1,3,colCount);ws.getCell(3,1).value=subtitle;
+  ws.getCell(3,1).font={name:'맑은 고딕',size:9,color:{argb:'FF708097'}};
+  ws.getCell(3,1).alignment={vertical:'middle',horizontal:'left'};ws.getRow(3).height=20;
+}
+function setHeaders(ws,rowNo,headers,fill){
+  const row=ws.getRow(rowNo); headers.forEach((h,i)=>row.getCell(i+1).value=h); styleHeaderRow(row,fill);
+  ws.autoFilter={from:{row:rowNo,column:1},to:{row:rowNo,column:headers.length}};
+}
+function styleStatusCell(cell,status){
+  const map={달성:['FFFBEAF2','FFB40059'],주의:['FFFFF0F6','FFC52769'],관리:['FFFFF3E7','FFB66813'],위험:['FFFFF0F3','FFC52752']};
+  const [fill,font]=map[status]||['FFF5F7F9','FF617187'];
+  cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:fill}};
+  cell.font={name:'맑은 고딕',size:9,bold:true,color:{argb:font}};
+}
+function workbookBase(){
+  const wb=new ExcelJS.Workbook();
+  wb.creator='DHC 앵커사업 통합 성과관리';
+  wb.lastModifiedBy='DHC 앵커사업운영팀';
+  wb.created=new Date(); wb.modified=new Date();
+  wb.subject='2026학년도(2차년도) 앵커사업 성과실적';
+  return wb;
+}
+
+function addDepartmentPerformanceSheet(wb){
+  const ws=wb.addWorksheet('핵심·자율지표',{properties:{tabColor:{argb:'FFB40059'}}});
+  const headers=['단위과제','대학','구분','지표명','단위','2차년도 목표값','실적값','달성률','상태','비고'];
+  setupSheet(ws,[11,16,12,42,9,15,14,12,10,38],5,3);
+  addSheetHeading(ws,'2차년도 핵심·자율지표 부서관리 현황',`웹 대시보드 LIVE 데이터 기준 · 생성 ${exportTimestamp()}`,headers.length);
+  setHeaders(ws,5,headers,'FFB40059');
+  const rows=exportPerfRows();
+  rows.forEach((r,i)=>{
+    const rate=excelPercentTextNumber(r.달성률);
+    const row=ws.getRow(6+i);
+    row.values=[r.단위과제,r.대학,r.구분,r.지표명,r.단위,excelNumber(r.목표),excelNumber(r.실적),rate,statusOf(rate),r.비고||''];
+    if(rate!=='') styleRateCell(row.getCell(8),rate);
+    styleStatusCell(row.getCell(9),statusOf(rate));
+  });
+  styleDataRows(ws,6,5+rows.length,headers.length);
+  rows.forEach((r,i)=>{const rate=excelPercentTextNumber(r.달성률);if(rate!=='') styleRateCell(ws.getRow(6+i).getCell(8),rate);styleStatusCell(ws.getRow(6+i).getCell(9),statusOf(rate));});
+  ws.getColumn(6).numFmt='#,##0.00';ws.getColumn(7).numFmt='#,##0.00';ws.getColumn(8).numFmt='0.0"%"';
+  return ws;
+}
+function addDepartmentQuantSheet(wb){
+  const ws=wb.addWorksheet('정량실적',{properties:{tabColor:{argb:'FF2F7DD3'}}});
+  const headers=['단위과제','단위과제명','실행내용','세부실적','2차년도 목표값','실적값','달성률','상태','담당부서','실적정의','대구 목표','대구 실적','계명 목표','계명 실적','영진 목표','영진 실적','과학 목표','과학 실적'];
+  setupSheet(ws,[10,27,34,35,14,13,12,10,22,36,11,11,11,11,11,11,11,11],5,4);
+  addSheetHeading(ws,'2차년도 정량실적 부서관리 현황',`대학별 목표·실적 포함 · 웹 대시보드 LIVE 데이터 기준 · 생성 ${exportTimestamp()}`,headers.length);
+  setHeaders(ws,5,headers,'FF0F2747');
+  const rows=exportQuantRows();
+  rows.forEach((r,i)=>{
+    const rate=quantRate(r);
+    const u=key=>({t:r.universityTargets?.[key],a:r.universityEntered?.[key]?r.universityActuals?.[key]:''});
+    const dg=u('대구'), km=u('계대'), yj=u('영진'), sc=u('과학');
+    const row=ws.getRow(6+i);
+    row.values=[r.task,r.taskName,r.execution,r.detail,excelNumber(r.target),r.actualEntered?excelNumber(r.actual):'',rate,statusOf(rate),r.dept,r.definition,excelNumber(dg.t),dg.a,excelNumber(km.t),km.a,excelNumber(yj.t),yj.a,excelNumber(sc.t),sc.a];
+  });
+  styleDataRows(ws,6,5+rows.length,headers.length);
+  rows.forEach((r,i)=>{const rate=quantRate(r);styleRateCell(ws.getRow(6+i).getCell(7),rate);styleStatusCell(ws.getRow(6+i).getCell(8),statusOf(rate));});
+  [5,6,11,12,13,14,15,16,17,18].forEach(c=>ws.getColumn(c).numFmt='#,##0.00');
+  ws.getColumn(7).numFmt='0.0"%"';
+  return ws;
+}
+function addTPPerformanceSheet(wb){
+  const ws=wb.addWorksheet('핵심·자율지표',{properties:{tabColor:{argb:'FFB40059'}}});
+  const headers=['단위과제','구분','지표명','단위','2차년도 성과목표','실적값','목표달성도','비고'];
+  setupSheet(ws,[13,13,45,9,16,14,14,40],5,3);
+  addSheetHeading(ws,'2차년도 핵심·자율지표 실적표',`대구테크노파크 제출형 참고 서식 · 생성 ${exportTimestamp()}`,headers.length);
+  setHeaders(ws,5,headers,'FFB40059');
+  const rows=exportPerfRows(); let prev='';
+  rows.forEach((r,i)=>{
+    const task=r.단위과제===prev?'':r.단위과제; prev=r.단위과제;
+    const rate=excelPercentTextNumber(r.달성률);
+    const row=ws.getRow(6+i);
+    row.values=[task,r.구분,r.지표명,r.단위,excelNumber(r.목표),excelNumber(r.실적),rate,r.비고||''];
+  });
+  styleDataRows(ws,6,5+rows.length,headers.length);
+  rows.forEach((r,i)=>{const rate=excelPercentTextNumber(r.달성률);if(rate!=='') styleRateCell(ws.getRow(6+i).getCell(7),rate);});
+  ws.getColumn(5).numFmt='#,##0.00';ws.getColumn(6).numFmt='#,##0.00';ws.getColumn(7).numFmt='0.0"%"';
+  return ws;
+}
+function addTPQuantSheet(wb){
+  const ws=wb.addWorksheet('정량실적',{properties:{tabColor:{argb:'FF0F2747'}}});
+  const headers=['프로젝트명','실행내용','RFP 전체 실적','2차년도 정량목표','실적값','목표달성도','대학별 목표/실적','비고'];
+  setupSheet(ws,[18,38,38,17,14,14,42,36],5,2);
+  addSheetHeading(ws,'2차년도 정량실적 실적표',`대구테크노파크 제출형 참고 서식 · 컨소시엄은 대학별 실적 병기 · 생성 ${exportTimestamp()}`,headers.length);
+  setHeaders(ws,5,headers,'FF0F2747');
+  const rows=exportQuantRows(); let prev='';
+  rows.forEach((r,i)=>{
+    const task=r.task===prev?'':r.task; prev=r.task;
+    const rate=quantRate(r);
+    const project=[task,r.taskName].filter(Boolean).join(' ');
+    const row=ws.getRow(6+i);
+    row.values=[project,r.execution,r.detail,excelNumber(r.target),r.actualEntered?excelNumber(r.actual):'',rate,universityBreakdown(r),[r.dept,r.definition].filter(Boolean).join(' · ')];
+  });
+  styleDataRows(ws,6,5+rows.length,headers.length);
+  rows.forEach((r,i)=>styleRateCell(ws.getRow(6+i).getCell(6),quantRate(r)));
+  ws.getColumn(4).numFmt='#,##0.00';ws.getColumn(5).numFmt='#,##0.00';ws.getColumn(6).numFmt='0.0"%"';
+  return ws;
+}
+async function saveWorkbook(wb,filename){
+  const buffer=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+async function exportDepartmentWorkbook(){
+  const wb=workbookBase(); addDepartmentPerformanceSheet(wb);addDepartmentQuantSheet(wb);
+  await saveWorkbook(wb,`DHC_2차년도_부서관리_성과실적_${exportStamp()}.xlsx`);
+}
+async function exportTPWorkbook(){
+  const wb=workbookBase(); addTPPerformanceSheet(wb);addTPQuantSheet(wb);
+  await saveWorkbook(wb,`DHC_2차년도_대구TP제출형_성과실적_${exportStamp()}.xlsx`);
+}
+function openDownloadModal(type){
+  pendingDownloadType=type;
+  const title=type==='department'?'부서관리용 엑셀 다운로드':'대구TP 제출형 엑셀 다운로드';
+  $('downloadModalTitle').textContent=title;
+  $('downloadModalDesc').textContent='2차년도 목푯값·실적값·달성률을 현재 LIVE 데이터로 생성합니다.';
+  $('downloadPassword').value='';$('downloadError').textContent='';
+  $('downloadModal').classList.add('show');
+  setTimeout(()=>$('downloadPassword').focus(),60);
+}
+function closeDownloadModal(){
+  $('downloadModal').classList.remove('show');pendingDownloadType=null;$('downloadError').textContent='';
+}
+async function confirmDownload(){
+  const err=$('downloadError'), btn=$('downloadConfirm');
+  if(!downloadDataReady()){
+    err.textContent='현재 LIVE 데이터 연결이 완료되지 않았습니다. 데이터 새로고침 후 다시 시도해 주세요.';return;
+  }
+  let passwordOK=false;
+  try{passwordOK=await passwordMatches($('downloadPassword').value)}catch(e){err.textContent=e.message;return;}
+  if(!passwordOK){
+    err.textContent='비밀번호가 일치하지 않습니다.';$('downloadPassword').select();return;
+  }
+  if(typeof ExcelJS==='undefined'){
+    err.textContent='엑셀 생성 모듈을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.';return;
+  }
+  btn.disabled=true;btn.textContent='파일 생성 중';err.textContent='';
+  try{
+    if(pendingDownloadType==='department') await exportDepartmentWorkbook();
+    else if(pendingDownloadType==='tp') await exportTPWorkbook();
+    closeDownloadModal();
+  }catch(e){
+    console.error('엑셀 다운로드 실패',e);err.textContent='엑셀 생성 중 오류가 발생했습니다. 새로고침 후 다시 시도해 주세요.';
+  }finally{btn.disabled=false;btn.textContent='확인 및 다운로드';}
+}
+
+document.querySelectorAll('[data-download]').forEach(btn=>btn.addEventListener('click',()=>openDownloadModal(btn.dataset.download)));
+$('downloadClose')?.addEventListener('click',closeDownloadModal);
+$('downloadCancel')?.addEventListener('click',closeDownloadModal);
+$('downloadConfirm')?.addEventListener('click',confirmDownload);
+$('downloadPassword')?.addEventListener('keydown',e=>{if(e.key==='Enter')confirmDownload();});
+$('downloadModal')?.addEventListener('click',e=>{if(e.target===$('downloadModal'))closeDownloadModal();});
+
 $('refreshBtn').addEventListener('click',()=>loadAll(true));
 renderPerformance();
 renderQuant();
+updateDownloadState();
 loadAll(false);
 
 </script>
