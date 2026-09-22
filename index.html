@@ -1,8 +1,264 @@
 <!doctype html>
-<html lang="ko"><head>
+<html lang="ko">
+<head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="refresh" content="0; url=./main_v3.html?v=20260922g">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#B40059">
 <title>DHC 앵커사업 통합 성과관리</title>
-<script>location.replace("./main_v3.html?v=20260922g");</script>
-</head><body></body></html>
+<style>
+  html,body{height:100%;margin:0}
+  body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Segoe UI",Arial,sans-serif;background:#f4f7fa;color:#0f2747}
+  .boot{height:100%;display:grid;place-items:center}
+  .boot-card{display:flex;align-items:center;gap:12px;padding:16px 20px;background:#fff;border:1px solid #dde4eb;border-radius:16px;box-shadow:0 8px 24px rgba(20,35,55,.06);font-weight:800}
+  .spin{width:18px;height:18px;border:3px solid #f2d4e3;border-top-color:#b40059;border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+<script>
+/* ==========================================================
+   DHC FAST SHELL v1.0
+   목적
+   1) 기존 main/performance/quantitative HTML은 그대로 유지
+   2) Google Apps Script 응답을 localStorage에 공통 캐시
+   3) 화면 진입 시 캐시 데이터를 즉시 표시하고 최신 데이터는 백그라운드 갱신
+   4) 상단 메뉴/자세히보기 이동도 이 셸을 경유하여 캐시를 계속 재사용
+   5) '데이터 새로고침' 클릭 시에는 캐시를 우회하여 즉시 최신 데이터 요청
+   ========================================================== */
+(function(){
+  'use strict';
+
+  const ROUTES = {
+    main: './main_v3.html?v=20260922g',
+    performance: './performance_v3.html?v=20260918f',
+    quantitative: './quantitative_v3.html?v=20260918f'
+  };
+
+  const CACHE_PREFIX = 'dhc-live-cache-v1:';
+  const FRESH_MS = 5 * 60 * 1000;       // 5분: 충분히 최신인 캐시
+  const MAX_STALE_MS = 24 * 60 * 60 * 1000; // 24시간: 네트워크 장애 시 허용할 최대 보존시간
+  const BG_REFRESH_MIN_GAP = 20 * 1000; // 동일 API 백그라운드 재호출 최소 간격
+  const bgRefreshing = new Map();
+  const lastBgRefresh = new Map();
+  let forceNetworkUntil = 0;
+
+  function getRoute(){
+    const p = new URLSearchParams(location.search).get('page');
+    if(p === 'performance' || p === 'perf') return 'performance';
+    if(p === 'quantitative' || p === 'quant') return 'quantitative';
+    return 'main';
+  }
+
+  function isGoogleDataUrl(url){
+    try{
+      const u = new URL(url, location.href);
+      return u.hostname === 'script.google.com' && u.pathname.includes('/macros/s/');
+    }catch(e){ return false; }
+  }
+
+  function normalizeDataUrl(url){
+    const u = new URL(url, location.href);
+    // 기존 코드가 매번 붙이는 캐시버스터와 JSONP 콜백은 같은 데이터로 취급
+    u.searchParams.delete('_');
+    u.searchParams.delete('callback');
+    // 파라미터 순서를 고정하여 같은 요청이 동일 캐시 키를 사용하도록 함
+    const sorted = [...u.searchParams.entries()].sort((a,b)=>{
+      const ak=a[0]+'='+a[1], bk=b[0]+'='+b[1];
+      return ak.localeCompare(bk);
+    });
+    u.search = '';
+    sorted.forEach(([k,v])=>u.searchParams.append(k,v));
+    return u.toString();
+  }
+
+  function cacheKey(url){ return CACHE_PREFIX + normalizeDataUrl(url); }
+
+  function readCache(url){
+    try{
+      const raw = localStorage.getItem(cacheKey(url));
+      if(!raw) return null;
+      const obj = JSON.parse(raw);
+      if(!obj || typeof obj.body !== 'string' || !obj.savedAt) return null;
+      obj.age = Date.now() - obj.savedAt;
+      return obj;
+    }catch(e){ return null; }
+  }
+
+  function writeCache(url, responseText, status, contentType){
+    try{
+      localStorage.setItem(cacheKey(url), JSON.stringify({
+        savedAt: Date.now(),
+        body: responseText,
+        status: status || 200,
+        contentType: contentType || 'application/json; charset=utf-8'
+      }));
+    }catch(e){
+      // localStorage 용량/보안 설정 문제는 원래 네트워크 동작을 막지 않음
+      console.warn('[DHC FAST] cache write skipped', e);
+    }
+  }
+
+  function responseFromCache(cached){
+    return new Response(cached.body, {
+      status: cached.status || 200,
+      headers: {
+        'Content-Type': cached.contentType || 'application/json; charset=utf-8',
+        'X-DHC-Cache': 'HIT'
+      }
+    });
+  }
+
+  function notifyCacheUpdated(key){
+    window.dispatchEvent(new CustomEvent('dhc:data-updated', {detail:{key}}));
+  }
+
+  function schedulePageRerender(){
+    if(window.__dhcRerenderTimer) return;
+    window.__dhcRerenderTimer = setTimeout(()=>{
+      window.__dhcRerenderTimer = null;
+      try{
+        // main_v3.html
+        if(typeof window.loadAll === 'function'){
+          window.loadAll(false);
+          return;
+        }
+        // performance_v3.html / quantitative_v3.html
+        if(typeof window.loadLive === 'function'){
+          window.loadLive();
+        }
+      }catch(e){
+        console.warn('[DHC FAST] background rerender skipped', e);
+      }
+    }, 120);
+  }
+
+  async function refreshInBackground(nativeFetch, input, init, url, oldBody){
+    const key = normalizeDataUrl(url);
+    const now = Date.now();
+    if(bgRefreshing.get(key)) return;
+    if(now - (lastBgRefresh.get(key) || 0) < BG_REFRESH_MIN_GAP) return;
+
+    bgRefreshing.set(key, true);
+    lastBgRefresh.set(key, now);
+    try{
+      const res = await nativeFetch(input, Object.assign({}, init || {}, {cache:'no-store'}));
+      if(!res.ok) return;
+      const text = await res.clone().text();
+      writeCache(url, text, res.status, res.headers.get('content-type'));
+      if(text !== oldBody){
+        notifyCacheUpdated(key);
+        schedulePageRerender();
+      }
+    }catch(e){
+      console.warn('[DHC FAST] background refresh failed', e);
+    }finally{
+      bgRefreshing.delete(key);
+    }
+  }
+
+  function installFetchCache(){
+    if(window.__DHC_FAST_FETCH_INSTALLED__) return;
+    window.__DHC_FAST_FETCH_INSTALLED__ = true;
+
+    const nativeFetch = window.fetch.bind(window);
+    window.__DHC_NATIVE_FETCH__ = nativeFetch;
+
+    window.fetch = async function(input, init){
+      const method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+      const url = typeof input === 'string' ? input : (input && input.url ? input.url : String(input));
+
+      if(method !== 'GET' || !isGoogleDataUrl(url)){
+        return nativeFetch(input, init);
+      }
+
+      const forced = Date.now() < forceNetworkUntil;
+      const cached = readCache(url);
+
+      // 일반 진입: 저장된 응답을 먼저 즉시 반환하고 최신값은 뒤에서 갱신
+      if(!forced && cached && cached.age <= MAX_STALE_MS){
+        // 5분 이내라도 LIVE 성격을 유지하기 위해 네트워크 확인은 백그라운드 수행
+        refreshInBackground(nativeFetch, input, init, url, cached.body);
+        return responseFromCache(cached);
+      }
+
+      // 최초 접속 또는 수동 새로고침: 네트워크를 직접 기다림
+      try{
+        const res = await nativeFetch(input, Object.assign({}, init || {}, {cache:'no-store'}));
+        if(res.ok){
+          const text = await res.clone().text();
+          writeCache(url, text, res.status, res.headers.get('content-type'));
+        }
+        return res;
+      }catch(err){
+        // 네트워크 실패 시 24시간 이내 캐시가 있으면 마지막 정상 데이터를 표시
+        if(cached && cached.age <= MAX_STALE_MS){
+          console.warn('[DHC FAST] network failed; using cached data');
+          return responseFromCache(cached);
+        }
+        throw err;
+      }
+    };
+
+    // 새로고침 버튼은 기존 코드가 실행되기 전에 강제 네트워크 모드로 전환
+    window.addEventListener('click', function(e){
+      const btn = e.target && e.target.closest ? e.target.closest('#refreshBtn') : null;
+      if(btn){
+        forceNetworkUntil = Date.now() + 15000;
+      }
+    }, true);
+  }
+
+  function rewriteInternalLinks(html){
+    return html
+      .replace(/href=(['"])\.\/main_v3\.html[^'\"]*\1/gi, 'href="./index.html?page=main"')
+      .replace(/href=(['"])\.\/performance_v3\.html[^'\"]*\1/gi, 'href="./index.html?page=performance"')
+      .replace(/href=(['"])\.\/quantitative_v3\.html[^'\"]*\1/gi, 'href="./index.html?page=quantitative"');
+  }
+
+  function postLoadScript(){
+    return `<script>
+      (function(){
+        // 다른 화면 HTML을 브라우저 캐시에 미리 적재해 다음 메뉴 이동 체감속도 향상
+        const pages=['./main_v3.html?v=20260922g','./performance_v3.html?v=20260918f','./quantitative_v3.html?v=20260918f'];
+        const idle=window.requestIdleCallback||function(fn){setTimeout(fn,700)};
+        idle(function(){pages.forEach(function(p){fetch(p,{cache:'force-cache'}).catch(function(){})})});
+      })();
+    <\/script>`;
+  }
+
+  async function boot(){
+    installFetchCache();
+    const route = getRoute();
+    const target = ROUTES[route] || ROUTES.main;
+
+    try{
+      const nativeFetch = window.__DHC_NATIVE_FETCH__ || window.fetch.bind(window);
+      const res = await nativeFetch(target, {cache:'force-cache'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      let html = await res.text();
+      html = rewriteInternalLinks(html);
+
+      // 유휴시간 프리패치 코드 삽입
+      html = html.replace(/<\/body>/i, postLoadScript() + '</body>');
+
+      document.open();
+      document.write(html);
+      document.close();
+    }catch(err){
+      console.error('[DHC FAST] shell load failed', err);
+      // 셸 자체에 문제가 생겨도 기존 페이지 접속은 보장
+      location.replace(target);
+    }
+  }
+
+  window.__DHC_FAST_BOOT__ = boot;
+})();
+</script>
+</head>
+<body>
+  <div class="boot" id="bootScreen">
+    <div class="boot-card"><span class="spin" aria-hidden="true"></span><span>DHC 성과관리 화면을 불러오는 중입니다.</span></div>
+  </div>
+<script>
+  window.__DHC_FAST_BOOT__();
+</script>
+</body>
+</html>
