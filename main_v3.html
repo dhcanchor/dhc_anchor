@@ -2384,6 +2384,45 @@ function styleStatusCell(cell,status){
   cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:fill}};
   cell.font={name:'맑은 고딕',size:9,bold:true,color:{argb:font}};
 }
+
+let __excelJsLoadPromise=null;
+function ensureExcelJSLoaded(){
+  if(window.ExcelJS) return Promise.resolve(window.ExcelJS);
+  if(__excelJsLoadPromise) return __excelJsLoadPromise;
+
+  const sources=[
+    'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
+    'https://unpkg.com/exceljs@4.4.0/dist/exceljs.min.js'
+  ];
+
+  __excelJsLoadPromise=new Promise((resolve,reject)=>{
+    let index=0;
+    const tryNext=()=>{
+      if(window.ExcelJS){resolve(window.ExcelJS);return;}
+      if(index>=sources.length){
+        reject(new Error('엑셀 생성 모듈을 불러오지 못했습니다. 네트워크 연결 후 다시 시도해 주세요.'));
+        return;
+      }
+      const src=sources[index++];
+      const s=document.createElement('script');
+      s.src=src;
+      s.async=true;
+      s.onload=()=>{
+        if(window.ExcelJS) resolve(window.ExcelJS);
+        else tryNext();
+      };
+      s.onerror=tryNext;
+      document.head.appendChild(s);
+    };
+    tryNext();
+  }).catch(err=>{
+    __excelJsLoadPromise=null;
+    throw err;
+  });
+
+  return __excelJsLoadPromise;
+}
+
 function workbookBase(){
   const wb=new ExcelJS.Workbook();
   wb.creator='DHC 앵커사업 통합 성과관리';
@@ -2509,6 +2548,7 @@ async function ensureLatestLiveForExport(){
 }
 async function exportDepartmentWorkbook(){
   await ensureLatestLiveForExport();
+  await ensureExcelJSLoaded();
   const wb=workbookBase();
   addDepartmentPerformanceSheet(wb);
   addDepartmentQuantSheet(wb);
@@ -2516,6 +2556,7 @@ async function exportDepartmentWorkbook(){
 }
 async function exportTPWorkbook(){
   await ensureLatestLiveForExport();
+  await ensureExcelJSLoaded();
   const wb=workbookBase();
   addTPPerformanceSheet(wb);
   addTPQuantSheet(wb);
