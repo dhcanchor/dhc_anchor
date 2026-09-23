@@ -777,6 +777,32 @@ body{
 })();
 </script>
 
+
+<style id="filter-kpi-harmonize-20260923">
+/* 성과지표/정량실적 상단 규격 통일 기준: 필터 48px, KPI 102px */
+.toolbar{align-items:stretch!important}
+.toolbar .select{
+  height:48px!important;
+  min-height:48px!important;
+  box-sizing:border-box!important;
+}
+.toolbar .select select{
+  height:48px!important;
+  min-height:48px!important;
+  box-sizing:border-box!important;
+}
+/* 정량실적과 동일하게 KPI 높이를 고정 */
+.summary .kpi{
+  height:102px!important;
+  min-height:102px!important;
+  box-sizing:border-box!important;
+}
+/* 드롭다운 펼침 목록은 굵게 표시하지 않음 */
+.toolbar .select select option{
+  font-weight:400!important;
+}
+</style>
+
 </head><body>
 <div class="global-top-shell">
   <header class="global-master-header">
