@@ -848,6 +848,113 @@ body{
 }
 </style>
 
+
+<style id="mobile-nav-4tabs-20260923">
+/* 모바일: 4개 메뉴를 한 화면에 고정 표시 */
+@media(max-width:680px){
+  /* 메인 화면: nav-menu 내부 4등분 */
+  .global-master-nav .nav-menu{
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:3px!important;
+    overflow:visible!important;
+  }
+  .global-master-nav .nav-menu a{
+    width:100%!important;
+    min-width:0!important;
+    height:36px!important;
+    padding:0 2px!important;
+    font-size:0!important;
+    overflow:hidden!important;
+  }
+  .global-master-nav .nav-menu a:nth-child(1)::before{content:"통합현황"}
+  .global-master-nav .nav-menu a:nth-child(2)::before{content:"성과지표"}
+  .global-master-nav .nav-menu a:nth-child(3)::before{content:"정량실적"}
+  .global-master-nav .nav-menu a:nth-child(4)::before{content:"예산분석"}
+  .global-master-nav .nav-menu a::before{
+    font-size:11px!important;
+    font-weight:800!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+  }
+
+  /* 상세 화면: nav의 직계 메뉴 4개도 동일하게 4등분 */
+  .global-master-nav:not(:has(.nav-menu)){
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:3px!important;
+    overflow:visible!important;
+    padding:6px!important;
+  }
+  .global-master-nav:not(:has(.nav-menu)) > a{
+    width:100%!important;
+    min-width:0!important;
+    height:36px!important;
+    padding:0 2px!important;
+    font-size:0!important;
+    overflow:hidden!important;
+  }
+  .global-master-nav:not(:has(.nav-menu)) > a:nth-child(1)::before{content:"통합현황"}
+  .global-master-nav:not(:has(.nav-menu)) > a:nth-child(2)::before{content:"성과지표"}
+  .global-master-nav:not(:has(.nav-menu)) > a:nth-child(3)::before{content:"정량실적"}
+  .global-master-nav:not(:has(.nav-menu)) > a:nth-child(4)::before{content:"예산분석"}
+  .global-master-nav:not(:has(.nav-menu)) > a::before{
+    font-size:11px!important;
+    font-weight:800!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+  }
+}
+</style>
+
+<style id="mobile-quant-sticky-table-20260923">
+/* 모바일 정량실적 상세표: No. + 실행내용 고정, 나머지만 가로 스크롤 */
+@media(max-width:680px){
+  .tablewrap{
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+    -webkit-overflow-scrolling:touch!important;
+    position:relative!important;
+  }
+  .tablewrap table{
+    border-collapse:separate!important;
+    border-spacing:0!important;
+    min-width:1360px!important;
+  }
+  .tablewrap th:nth-child(1),
+  .tablewrap td:nth-child(1){
+    position:sticky!important;
+    left:0!important;
+    width:42px!important;
+    min-width:42px!important;
+    max-width:42px!important;
+    z-index:4!important;
+    background:#fff!important;
+  }
+  .tablewrap th:nth-child(2),
+  .tablewrap td:nth-child(2){
+    position:sticky!important;
+    left:42px!important;
+    width:180px!important;
+    min-width:180px!important;
+    max-width:180px!important;
+    z-index:3!important;
+    background:#fff!important;
+    box-shadow:8px 0 12px -12px rgba(15,39,71,.55)!important;
+  }
+  .tablewrap thead th:nth-child(1),
+  .tablewrap thead th:nth-child(2){
+    background:#F7F9FB!important;
+    z-index:6!important;
+  }
+  .tablewrap td:nth-child(2){
+    white-space:normal!important;
+    line-height:1.45!important;
+  }
+}
+</style>
+
 </head><body>
 <div class="global-top-shell">
   <header class="global-master-header">
