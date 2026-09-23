@@ -2500,18 +2500,33 @@ function downloadEmbeddedWorkbook(type, filename){
   a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
+async function ensureLatestLiveForExport(){
+  // 다운로드 시점의 Google Sheets 최신값을 다시 조회한 뒤 엑셀을 생성한다.
+  await loadAll(true);
+  if(!downloadDataReady()){
+    throw new Error('성과지표 또는 정량실적 LIVE 연결을 확인해 주세요.');
+  }
+}
 async function exportDepartmentWorkbook(){
-  downloadEmbeddedWorkbook('department',`DHC_2차년도_부서관리_성과실적_${exportStamp()}.xlsx`);
+  await ensureLatestLiveForExport();
+  const wb=workbookBase();
+  addDepartmentPerformanceSheet(wb);
+  addDepartmentQuantSheet(wb);
+  await saveWorkbook(wb,`DHC_2차년도_부서관리_성과실적_${exportStamp()}.xlsx`);
 }
 async function exportTPWorkbook(){
-  downloadEmbeddedWorkbook('tp',`DHC_2차년도_대구TP제출용_성과실적_${exportStamp()}.xlsx`);
+  await ensureLatestLiveForExport();
+  const wb=workbookBase();
+  addTPPerformanceSheet(wb);
+  addTPQuantSheet(wb);
+  await saveWorkbook(wb,`DHC_2차년도_대구TP제출용_성과실적_${exportStamp()}.xlsx`);
 }
 
 function openDownloadModal(type){
   pendingDownloadType=type;
   const title=type==='department'?'부서관리용 엑셀':'대구TP 제출용';
   $('downloadModalTitle').textContent=title;
-  $('downloadModalDesc').textContent='비밀번호 확인 후 최종 확정 엑셀 파일을 다운로드합니다.';
+  $('downloadModalDesc').textContent='비밀번호 확인 후 Google Sheets 최신 LIVE 데이터를 다시 불러와 엑셀을 생성합니다.';
   $('downloadPassword').value='';$('downloadError').textContent='';
   $('downloadModal').classList.add('show');
   setTimeout(()=>$('downloadPassword').focus(),60);
@@ -2532,7 +2547,7 @@ async function confirmDownload(){
     else if(pendingDownloadType==='tp') await exportTPWorkbook();
     closeDownloadModal();
   }catch(e){
-    console.error('엑셀 다운로드 실패',e);err.textContent='엑셀 다운로드 중 오류가 발생했습니다. 다시 시도해 주세요.';
+    console.error('엑셀 다운로드 실패',e);err.textContent=e?.message||'엑셀 다운로드 중 오류가 발생했습니다. 다시 시도해 주세요.';
   }finally{btn.disabled=false;btn.textContent='확인 및 다운로드';}
 }
 
