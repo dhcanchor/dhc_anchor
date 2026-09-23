@@ -440,62 +440,116 @@ body{
 }
 </style>
 
+
+
 <style id="mobile-nav-4tabs-20260923">
-/* 모바일: 4개 메뉴를 한 화면에 고정 표시 */
+/* 모바일: 메뉴명은 줄이지 않고 간격/글자크기만 압축해 4개를 한 줄 표시 */
 @media(max-width:680px){
-  /* 메인 화면: nav-menu 내부 4등분 */
+  .global-master-nav{
+    min-height:48px!important;
+    height:48px!important;
+    padding:5px!important;
+    gap:0!important;
+    overflow:visible!important;
+  }
   .global-master-nav .nav-menu{
     width:100%!important;
     display:grid!important;
     grid-template-columns:repeat(4,minmax(0,1fr))!important;
-    gap:3px!important;
+    gap:1px!important;
     overflow:visible!important;
   }
-  .global-master-nav .nav-menu a{
-    width:100%!important;
-    min-width:0!important;
-    height:36px!important;
-    padding:0 2px!important;
-    font-size:0!important;
-    overflow:hidden!important;
-  }
-  .global-master-nav .nav-menu a:nth-child(1)::before{content:"통합현황"}
-  .global-master-nav .nav-menu a:nth-child(2)::before{content:"성과지표"}
-  .global-master-nav .nav-menu a:nth-child(3)::before{content:"정량실적"}
-  .global-master-nav .nav-menu a:nth-child(4)::before{content:"예산분석"}
-  .global-master-nav .nav-menu a::before{
-    font-size:11px!important;
-    font-weight:800!important;
-    line-height:1!important;
-    white-space:nowrap!important;
-  }
-
-  /* 상세 화면: nav의 직계 메뉴 4개도 동일하게 4등분 */
-  .global-master-nav:not(:has(.nav-menu)){
-    display:grid!important;
-    grid-template-columns:repeat(4,minmax(0,1fr))!important;
-    gap:3px!important;
-    overflow:visible!important;
-    padding:6px!important;
-  }
+  .global-master-nav .nav-menu a,
   .global-master-nav:not(:has(.nav-menu)) > a{
     width:100%!important;
     min-width:0!important;
     height:36px!important;
-    padding:0 2px!important;
-    font-size:0!important;
-    overflow:hidden!important;
-  }
-  .global-master-nav:not(:has(.nav-menu)) > a:nth-child(1)::before{content:"통합현황"}
-  .global-master-nav:not(:has(.nav-menu)) > a:nth-child(2)::before{content:"성과지표"}
-  .global-master-nav:not(:has(.nav-menu)) > a:nth-child(3)::before{content:"정량실적"}
-  .global-master-nav:not(:has(.nav-menu)) > a:nth-child(4)::before{content:"예산분석"}
-  .global-master-nav:not(:has(.nav-menu)) > a::before{
-    font-size:11px!important;
+    min-height:36px!important;
+    padding:0 1px!important;
+    margin:0!important;
+    font-size:9.5px!important;
     font-weight:800!important;
-    line-height:1!important;
+    letter-spacing:-.08em!important;
     white-space:nowrap!important;
+    overflow:visible!important;
   }
+  .global-master-nav:not(:has(.nav-menu)){
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:1px!important;
+  }
+}
+@media(max-width:390px){
+  .global-master-nav .nav-menu a,
+  .global-master-nav:not(:has(.nav-menu)) > a{
+    font-size:9px!important;
+    letter-spacing:-.1em!important;
+  }
+}
+</style>
+
+
+<style id="mobile-ipa-responsive-20260923">
+/* 모바일 IPA 분석: 세로형 차트와 압축형 필터 */
+@media(max-width:680px){
+  .analysis-grid{grid-template-columns:1fr!important;gap:10px!important}
+  .panel{padding:12px 10px!important}
+  .panel-head{display:block!important;margin-bottom:10px!important}
+  .panel-head h2{font-size:18px!important}
+  .panel-head p{font-size:10px!important;line-height:1.45!important}
+  .filters{
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:5px!important;
+    margin-top:9px!important;
+  }
+  .filters select{
+    width:100%!important;
+    min-width:0!important;
+    height:36px!important;
+    padding:0 20px 0 7px!important;
+    font-size:9.5px!important;
+    font-weight:650!important;
+    border-radius:10px!important;
+  }
+  .filter-summary{
+    padding:8px!important;
+    gap:5px!important;
+    font-size:9px!important;
+    line-height:1.35!important;
+  }
+  .filter-summary .filter-pill{height:23px!important;padding:0 7px!important;font-size:9px!important}
+  .filter-summary strong,.filter-summary b{font-size:9.5px!important}
+  #bubbleWrap{
+    width:100%!important;
+    height:min(112vw,440px)!important;
+    min-height:390px!important;
+    max-height:440px!important;
+    border-radius:13px!important;
+    overflow:hidden!important;
+    touch-action:manipulation!important;
+  }
+  #bubbleSvg{width:100%!important;height:100%!important}
+  .tooltip{
+    max-width:230px!important;
+    font-size:10px!important;
+    line-height:1.45!important;
+  }
+  .chart-legend{
+    justify-content:flex-start!important;
+    gap:10px!important;
+    font-size:9px!important;
+    margin-top:7px!important;
+  }
+  .quad-list{grid-template-columns:1fr 1fr!important;gap:7px!important}
+  .quad{padding:10px!important;border-radius:12px!important}
+  .quad h3{font-size:10px!important}
+  .quad strong{font-size:18px!important}
+  .quad p{font-size:9px!important;margin-top:6px!important}
+  .quad-meta{display:block!important;font-size:8.5px!important;margin-top:7px!important;padding-top:7px!important}
+  .quad-meta span{display:block!important;margin-top:2px!important}
+  .key-conclusion{font-size:9.5px!important}
 }
 </style>
 
@@ -704,7 +758,11 @@ function renderTables(data){
   document.getElementById('spendBody').innerHTML=top.length?top.map(d=>`<tr><td>${d.code}</td><td class="name"><b>${d.name}</b></td><td>${d.quadrant}사분면</td><td>${d.importance.toFixed(1)}</td><td>${d.need.toFixed(1)}</td><td class="money">${fmtM(d.spend)}</td></tr>`).join(''):'<tr><td colspan="6">선택 조건에 해당하는 과제가 없습니다.</td></tr>';
 }
 function draw(data){
-  const vb={w:980,h:520},m={top:42,right:34,bottom:58,left:68};
+  const mobile=window.matchMedia('(max-width:680px)').matches;
+  const vb=mobile?{w:520,h:620}:{w:980,h:520};
+  const m=mobile?{top:48,right:18,bottom:54,left:48}:{top:42,right:34,bottom:58,left:68};
+  svg.setAttribute('viewBox',`0 0 ${vb.w} ${vb.h}`);
+  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
   const W=vb.w-m.left-m.right,H=vb.h-m.top-m.bottom;
   const maxSpend=Math.max(...DATA.map(d=>d.spend),1);
   const x=v=>m.left+((v-axisMin)/(axisMax-axisMin))*W;
@@ -724,36 +782,55 @@ function draw(data){
     const gx=x(i),gy=y(i);
     svg.appendChild(el('line',{x1:gx,y1:m.top,x2:gx,y2:m.top+H,stroke:'#DFE7EE','stroke-width':'1'}));
     svg.appendChild(el('line',{x1:m.left,y1:gy,x2:m.left+W,y2:gy,stroke:'#DFE7EE','stroke-width':'1'}));
-    let t=el('text',{x:gx,y:m.top+H+28,'text-anchor':'middle',fill:'#5E6E81','font-size':'12','font-weight':'750'});t.textContent=i.toFixed(1);svg.appendChild(t);
-    t=el('text',{x:m.left-16,y:gy+4,'text-anchor':'end',fill:'#5E6E81','font-size':'12','font-weight':'750'});t.textContent=i.toFixed(1);svg.appendChild(t);
+    let t=el('text',{x:gx,y:m.top+H+(mobile?22:28),'text-anchor':'middle',fill:'#5E6E81','font-size':mobile?'10':'12','font-weight':'750'});t.textContent=i.toFixed(1);svg.appendChild(t);
+    t=el('text',{x:m.left-(mobile?9:16),y:gy+4,'text-anchor':'end',fill:'#5E6E81','font-size':mobile?'10':'12','font-weight':'750'});t.textContent=i.toFixed(1);svg.appendChild(t);
   }
   svg.appendChild(el('line',{x1:rx,y1:m.top,x2:rx,y2:m.top+H,stroke:'#5C6E82','stroke-width':'2.2','stroke-dasharray':'7 6'}));
   svg.appendChild(el('line',{x1:m.left,y1:ry,x2:m.left+W,y2:ry,stroke:'#5C6E82','stroke-width':'2.2','stroke-dasharray':'7 6'}));
-  let t=el('text',{x:m.left+W/2,y:vb.h-14,'text-anchor':'middle',fill:'#465A72','font-size':'13','font-weight':'850'});t.textContent='필요도';svg.appendChild(t);
-  t=el('text',{x:22,y:m.top+H/2,transform:`rotate(-90 22 ${m.top+H/2})`,fill:'#465A72','font-size':'13','font-weight':'850'});t.textContent='중요도';svg.appendChild(t);
+  let t=el('text',{x:m.left+W/2,y:vb.h-(mobile?9:14),'text-anchor':'middle',fill:'#465A72','font-size':mobile?'11':'13','font-weight':'850'});t.textContent='필요도';svg.appendChild(t);
+  const axisX=mobile?14:22;t=el('text',{x:axisX,y:m.top+H/2,transform:`rotate(-90 ${axisX} ${m.top+H/2})`,fill:'#465A72','font-size':mobile?'11':'13','font-weight':'850'});t.textContent='중요도';svg.appendChild(t);
   const qs=[
-    {x:m.left+14,y:m.top+23,a:'2사분면',b:'중요도↑ · 필요도↓',col:c[2]},
-    {x:rx+18,y:m.top+23,a:'1사분면',b:'중요도↑ · 필요도↑',col:c[1]},
-    {x:m.left+14,y:ry+30,a:'3사분면',b:'중요도↓ · 필요도↓',col:c[3]},
-    {x:rx+18,y:ry+30,a:'4사분면',b:'중요도↓ · 필요도↑',col:c[4]}
+    {x:m.left+(mobile?8:14),y:m.top+(mobile?18:23),a:'2사분면',b:'중요도↑ · 필요도↓',col:c[2]},
+    {x:rx+(mobile?8:18),y:m.top+(mobile?18:23),a:'1사분면',b:'중요도↑ · 필요도↑',col:c[1]},
+    {x:m.left+(mobile?8:14),y:ry+(mobile?22:30),a:'3사분면',b:'중요도↓ · 필요도↓',col:c[3]},
+    {x:rx+(mobile?8:18),y:ry+(mobile?22:30),a:'4사분면',b:'중요도↓ · 필요도↑',col:c[4]}
   ];
-  qs.forEach(q=>{let a=el('text',{x:q.x,y:q.y,fill:q.col,'font-size':'14','font-weight':'900'});a.textContent=q.a;svg.appendChild(a);let b=el('text',{x:q.x,y:q.y+18,fill:q.col,'font-size':'10.5','font-weight':'800'});b.textContent=q.b;svg.appendChild(b)});
+  qs.forEach(q=>{
+    let a=el('text',{x:q.x,y:q.y,fill:q.col,'font-size':mobile?'11':'14','font-weight':'900'});a.textContent=q.a;svg.appendChild(a);
+    let b=el('text',{x:q.x,y:q.y+(mobile?14:18),fill:q.col,'font-size':mobile?'8':'10.5','font-weight':'800'});b.textContent=q.b;svg.appendChild(b)
+  });
   data.forEach(d=>{
-    const r=7+Math.sqrt(d.spend/maxSpend)*19;
+    const r=(mobile?5:7)+Math.sqrt(d.spend/maxSpend)*(mobile?13:19);
     const circle=el('circle',{cx:x(d.need),cy:y(d.importance),r:r.toFixed(1),fill:c[d.quadrant],opacity:'.78',stroke:'#fff','stroke-width':'2.5'});
     circle.style.filter='drop-shadow(0 2px 3px rgba(20,35,55,.18))';circle.style.cursor='pointer';
     circle.dataset.tip=`<b>${d.code}. ${d.name}</b><br>${d.university} · 단위과제 ${d.unit}<br>중요도 ${d.importance.toFixed(1)} · 필요도 ${d.need.toFixed(1)}<br>1차년도 집행금액 ${fmtM(d.spend)}백만원<br>${d.quadrant}사분면`;
-    const showTip=e=>{tooltip.style.display='block';tooltip.innerHTML=e.currentTarget.dataset.tip;const box=document.getElementById('bubbleWrap').getBoundingClientRect();let lx=e.clientX-box.left+14,ty=e.clientY-box.top+14;if(lx>box.width-270)lx=e.clientX-box.left-260;if(ty>box.height-100)ty=e.clientY-box.top-100;tooltip.style.left=lx+'px';tooltip.style.top=ty+'px'};
-    circle.addEventListener('mousemove',showTip);circle.addEventListener('mouseleave',()=>tooltip.style.display='none');svg.appendChild(circle);
-    const labelCodes=['3-3-3','3-2-2','3-2-1','3-5-1','1-1-2','1-1-1','1-3-1','3-5-3'];
+    const showTip=e=>{
+      tooltip.style.display='block';tooltip.innerHTML=e.currentTarget.dataset.tip;
+      const box=document.getElementById('bubbleWrap').getBoundingClientRect();
+      const pt=e.touches?.[0]||e;
+      let lx=(pt.clientX||box.left+box.width/2)-box.left+10,ty=(pt.clientY||box.top+box.height/2)-box.top+10;
+      const tipW=mobile?230:270;
+      if(lx>box.width-tipW)lx=Math.max(8,box.width-tipW-8);
+      if(ty>box.height-110)ty=Math.max(8,box.height-110);
+      tooltip.style.left=lx+'px';tooltip.style.top=ty+'px'
+    };
+    circle.addEventListener('mousemove',showTip);
+    circle.addEventListener('click',showTip);
+    circle.addEventListener('touchstart',showTip,{passive:true});
+    circle.addEventListener('mouseleave',()=>{if(!mobile)tooltip.style.display='none'});
+    svg.appendChild(circle);
+    const labelCodes=mobile?['3-3-3','3-2-2','3-2-1','3-5-1','4-5-4']:['3-3-3','3-2-2','3-2-1','3-5-1','1-1-2','1-1-1','1-3-1','3-5-3'];
     if(labelCodes.includes(d.code)){
       const labelText=d.code==='1-3-1'?`${d.code}(${d.university})`:d.code;
-      const label=el('text',{x:x(d.need)+r+5,y:y(d.importance)+4,fill:'#20364F','font-size':'10.5','font-weight':'900','paint-order':'stroke','stroke':'#fff','stroke-width':'4','stroke-linejoin':'round'});label.textContent=labelText;svg.appendChild(label);
+      const label=el('text',{x:x(d.need)+r+5,y:y(d.importance)+4,fill:'#20364F','font-size':mobile?'8.5':'10.5','font-weight':'900','paint-order':'stroke','stroke':'#fff','stroke-width':'4','stroke-linejoin':'round'});label.textContent=labelText;svg.appendChild(label);
     }
   });
 }
 function redraw(){const data=filteredData();updateSummary(data);renderTables(data);draw(data);}
 [unitFilter,univFilter,quadFilter].forEach(el=>el.addEventListener('change',redraw));
+let __ipaResizeTimer;
+window.addEventListener('resize',()=>{clearTimeout(__ipaResizeTimer);__ipaResizeTimer=setTimeout(redraw,120)});
+document.getElementById('bubbleWrap')?.addEventListener('click',e=>{if(e.target.id==='bubbleWrap'||e.target.id==='bubbleSvg')tooltip.style.display='none'});
 redraw();
 </script>
 <script id="budget-global-refresh">
