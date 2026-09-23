@@ -236,6 +236,24 @@
       let html = await res.text();
       html = rewriteInternalLinks(html);
 
+      // 검색창 브라우저 자동완성/검색기록 차단
+      // 동적 셸에서 동일 URL로 화면을 전환할 때 Chrome이 이전 입력 이력을
+      // 제안 목록으로 표시하는 현상을 방지한다.
+      html = html.replace(
+        /<input\s+id=(['"])(search)\1([^>]*)>/gi,
+        function(match, quote, id, rest){
+          // 기존 속성에 중복되지 않도록 autocomplete/name/type 관련 속성 제거 후 재지정
+          rest = rest
+            .replace(/\sautocomplete=(['"])[^'"]*\1/gi,'')
+            .replace(/\sname=(['"])[^'"]*\1/gi,'')
+            .replace(/\stype=(['"])[^'"]*\1/gi,'')
+            .replace(/\saria-autocomplete=(['"])[^'"]*\1/gi,'')
+            .replace(/\sautocapitalize=(['"])[^'"]*\1/gi,'')
+            .replace(/\sspellcheck=(['"])[^'"]*\1/gi,'');
+          return '<input id="search" name="dhc_quant_search_20260923" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" aria-autocomplete="none"'+rest+'>';
+        }
+      );
+
       // 유휴시간 프리패치 코드 삽입
       html = html.replace(/<\/body>/i, postLoadScript() + '</body>');
 
