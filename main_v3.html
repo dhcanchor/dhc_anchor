@@ -1459,61 +1459,50 @@ body{
 </script>
 
 
+
+
 <style id="mobile-nav-4tabs-20260923">
-/* 모바일: 4개 메뉴를 한 화면에 고정 표시 */
+/* 모바일: 메뉴명은 줄이지 않고 간격/글자크기만 압축해 4개를 한 줄 표시 */
 @media(max-width:680px){
-  /* 메인 화면: nav-menu 내부 4등분 */
+  .global-master-nav{
+    min-height:48px!important;
+    height:48px!important;
+    padding:5px!important;
+    gap:0!important;
+    overflow:visible!important;
+  }
   .global-master-nav .nav-menu{
     width:100%!important;
     display:grid!important;
     grid-template-columns:repeat(4,minmax(0,1fr))!important;
-    gap:3px!important;
+    gap:1px!important;
     overflow:visible!important;
   }
-  .global-master-nav .nav-menu a{
-    width:100%!important;
-    min-width:0!important;
-    height:36px!important;
-    padding:0 2px!important;
-    font-size:0!important;
-    overflow:hidden!important;
-  }
-  .global-master-nav .nav-menu a:nth-child(1)::before{content:"통합현황"}
-  .global-master-nav .nav-menu a:nth-child(2)::before{content:"성과지표"}
-  .global-master-nav .nav-menu a:nth-child(3)::before{content:"정량실적"}
-  .global-master-nav .nav-menu a:nth-child(4)::before{content:"예산분석"}
-  .global-master-nav .nav-menu a::before{
-    font-size:11px!important;
-    font-weight:800!important;
-    line-height:1!important;
-    white-space:nowrap!important;
-  }
-
-  /* 상세 화면: nav의 직계 메뉴 4개도 동일하게 4등분 */
-  .global-master-nav:not(:has(.nav-menu)){
-    display:grid!important;
-    grid-template-columns:repeat(4,minmax(0,1fr))!important;
-    gap:3px!important;
-    overflow:visible!important;
-    padding:6px!important;
-  }
+  .global-master-nav .nav-menu a,
   .global-master-nav:not(:has(.nav-menu)) > a{
     width:100%!important;
     min-width:0!important;
     height:36px!important;
-    padding:0 2px!important;
-    font-size:0!important;
-    overflow:hidden!important;
-  }
-  .global-master-nav:not(:has(.nav-menu)) > a:nth-child(1)::before{content:"통합현황"}
-  .global-master-nav:not(:has(.nav-menu)) > a:nth-child(2)::before{content:"성과지표"}
-  .global-master-nav:not(:has(.nav-menu)) > a:nth-child(3)::before{content:"정량실적"}
-  .global-master-nav:not(:has(.nav-menu)) > a:nth-child(4)::before{content:"예산분석"}
-  .global-master-nav:not(:has(.nav-menu)) > a::before{
-    font-size:11px!important;
+    min-height:36px!important;
+    padding:0 1px!important;
+    margin:0!important;
+    font-size:9.5px!important;
     font-weight:800!important;
-    line-height:1!important;
+    letter-spacing:-.08em!important;
     white-space:nowrap!important;
+    overflow:visible!important;
+  }
+  .global-master-nav:not(:has(.nav-menu)){
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:1px!important;
+  }
+}
+@media(max-width:390px){
+  .global-master-nav .nav-menu a,
+  .global-master-nav:not(:has(.nav-menu)) > a{
+    font-size:9px!important;
+    letter-spacing:-.1em!important;
   }
 }
 </style>
