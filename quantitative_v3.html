@@ -763,6 +763,20 @@ body{
 }
 </style>
 
+
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<link rel="dns-prefetch" href="//script.google.com">
+<script>
+/* FAST LIVE BOOT: 기존 정량실적 구조는 그대로 두고 데이터 요청만 먼저 시작 */
+(function(){
+  const API="https://script.google.com/macros/s/AKfycbwA2dlMifKGrw0L-wxKuILXHH_1uMn_tLRFdrVPFPIcmb7QcHG03hQHOZjh4F6W3_RFpA/exec", stamp=Date.now();
+  window.__DHC_QUANT_PREFETCH__=fetch(API+'?view=quantitative&sheet='+encodeURIComponent('정량실적')+'&_='+stamp,{cache:'no-store',redirect:'follow'})
+    .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(value=>({ok:true,value}),error=>({ok:false,error}));
+})();
+</script>
+
 </head><body>
 <div class="global-top-shell">
   <header class="global-master-header">
@@ -776,13 +790,13 @@ body{
         <div class="global-live"><span class="global-dot"></span><span id="liveText">Google Sheets 연결 중</span></div>
         <div class="global-updated" id="syncText">최신 데이터를 확인하고 있습니다</div>
       </div>
-      <button class="global-refresh" onclick="loadLive()">↻ 데이터 새로고침</button>
+      <button class="global-refresh" onclick="loadLive(true)">↻ 데이터 새로고침</button>
     </div>
   </header>
   <nav class="global-master-nav" aria-label="성과관리 메뉴">
-  <a href="./main_v3.html?v=20260918j">통합현황</a>
-  <a href="./performance_v3.html?v=20260918j">성과지표 관리</a>
-  <a class="active" href="./quantitative_v3.html?v=20260918j">정량실적 관리</a>
+  <a href="./main_v3.html?v=20260923fast1">통합현황</a>
+  <a href="./performance_v3.html?v=20260923fast1">성과지표 관리</a>
+  <a class="active" href="./quantitative_v3.html?v=20260923fast1">정량실적 관리</a>
 </nav>
 </div>
 <div class="wrap">
@@ -1046,55 +1060,63 @@ function resetAll(){
  ['statusFilter','orgFilter','taskFilter','deptFilter','sortFilter'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
  render();
 }
-async function loadLive(){
+const QUANT_FAST_CACHE_KEY='dhc-html-fast-v1:quant';
+function readQuantFastCache(){try{const x=JSON.parse(localStorage.getItem(QUANT_FAST_CACHE_KEY)||'null');if(x&&x.payload)return x;const legacy=JSON.parse(localStorage.getItem('dhc-react-v3:quant')||'null');if(legacy&&Array.isArray(legacy.data)&&legacy.data.length)return {savedAt:legacy.savedAt||0,payload:{data:legacy.data,lastUpdated:legacy.lastUpdated||''}};return null}catch(e){return null}}
+function writeQuantFastCache(payload){try{localStorage.setItem(QUANT_FAST_CACHE_KEY,JSON.stringify({savedAt:Date.now(),payload}))}catch(e){console.warn('정량실적 LIVE cache 저장 생략',e)}}
+function applyQuantPayload(payload){
+ const raw=_extractLiveRows(payload);
+ const arr=raw.map(_normalizeLiveRow).filter(r=>r.task && r.exec && r.target!==null && r.target>0);
+ if(!arr.length)throw new Error('정량실적 LIVE 데이터 0건');
+ DATA=arr; summarize(); fillFilters(); render();
+ return payload?.meta?.lastUpdated||payload?.lastUpdated||payload?.updatedAt||'';
+}
+async function loadLive(force=false){
  const syncText=document.getElementById('syncText');
  const liveText=document.getElementById('liveText');
-
- if(syncText)syncText.textContent='최신 데이터를 확인하고 있습니다';
- if(liveText)liveText.textContent='Google Sheets 연결 중';
-
+ let cacheApplied=false;
+ if(!force){
+   const cached=readQuantFastCache();
+   if(cached){
+     try{
+       const last=applyQuantPayload(cached.payload);
+       if(liveText)liveText.textContent='저장 데이터 표시 · LIVE 확인 중';
+       if(syncText)syncText.textContent=last?'마지막 정상 데이터 · '+last+' · 최신값 확인 중':'마지막 정상 LIVE 데이터 · 최신값 확인 중';
+       cacheApplied=true;
+     }catch(e){console.warn('정량실적 저장 캐시 적용 실패',e)}
+   }
+ }
+ if(!cacheApplied){
+   if(syncText)syncText.textContent='최신 데이터를 확인하고 있습니다';
+   if(liveText)liveText.textContent=force?'Google Sheets 새로고침 중':'Google Sheets 연결 중';
+ }
  try{
-  const url=API_URL
-    +'?view=quantitative'
-    +'&sheet='+encodeURIComponent('정량실적')
-    +'&_='+Date.now();
-
-  const res=await fetch(url,{cache:'no-store',redirect:'follow'});
-  if(!res.ok)throw new Error('HTTP '+res.status);
-
-  const payload=await res.json();
-  const raw=_extractLiveRows(payload);
-  const arr=raw
-    .map(_normalizeLiveRow)
-    .filter(r=>r.task && r.exec && r.target!==null && r.target>0);
-
-  if(!arr.length)throw new Error('정량실적 LIVE 데이터 0건');
-
-  DATA=arr;
-
-  if(liveText)liveText.textContent='Google Sheets LIVE 연동';
-  if(syncText){
-    const lastUpdated=payload?.meta?.lastUpdated||payload?.lastUpdated||payload?.updatedAt||'';
-    syncText.textContent=lastUpdated
-      ? '최종 데이터 기준 · '+lastUpdated
-      : '정량실적 실시간 연동';
-  }
-
-  summarize();
-  fillFilters();
-  render();
-
+   let payload;
+   const early=!force?window.__DHC_QUANT_PREFETCH__:null;
+   if(early){
+     const prefetched=await early;
+     if(!prefetched?.ok)throw prefetched?.error||new Error('조기 요청 실패');
+     payload=prefetched.value;
+   }else{
+     const url=API_URL+'?view=quantitative&sheet='+encodeURIComponent('정량실적')+'&_='+Date.now();
+     const res=await fetch(url,{cache:'no-store',redirect:'follow'});
+     if(!res.ok)throw new Error('HTTP '+res.status);
+     payload=await res.json();
+   }
+   const lastUpdated=applyQuantPayload(payload);
+   writeQuantFastCache(payload);
+   if(liveText)liveText.textContent='Google Sheets LIVE 연동';
+   if(syncText)syncText.textContent=lastUpdated?'최종 데이터 기준 · '+lastUpdated:'정량실적 실시간 연동';
  }catch(e){
-  console.error('정량실적 Google Sheets 연동 실패',e);
-
-  DATA=FALLBACK;
-
-  if(liveText)liveText.textContent='Google Sheets 연결 확인 필요';
-  if(syncText)syncText.textContent='정량실적 API 연결 실패 · 저장 데이터 표시';
-
-  summarize();
-  fillFilters();
-  render();
+   console.error('정량실적 Google Sheets 연동 실패',e);
+   if(cacheApplied){
+     if(liveText)liveText.textContent='저장 데이터 표시 · 연결 재확인 필요';
+     if(syncText)syncText.textContent='마지막 정상 LIVE 데이터 표시';
+     return;
+   }
+   DATA=FALLBACK;
+   if(liveText)liveText.textContent='Google Sheets 연결 확인 필요';
+   if(syncText)syncText.textContent='정량실적 API 연결 실패 · 저장 데이터 표시';
+   summarize();fillFilters();render();
  }
 }
 document.addEventListener('DOMContentLoaded',()=>{

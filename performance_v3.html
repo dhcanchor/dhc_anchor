@@ -1744,6 +1744,21 @@ body{
 }
 </style>
 
+
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<link rel="preconnect" href="https://docs.google.com">
+<link rel="dns-prefetch" href="//script.google.com">
+<script>
+/* FAST LIVE BOOT: 기존 UI/툴팁/엠블럼은 변경하지 않고 데이터 요청만 먼저 시작 */
+(function(){
+  const API="https://script.google.com/macros/s/AKfycbyRuwUw4ZOpzCjtgY2jusLkKXfufLdB3nlCKbeO9CO6j_iFZd07RdH5HBEuX42Ob2RR8Q/exec", stamp=Date.now();
+  window.__DHC_PERF_PREFETCH__=fetch(API+'?_='+stamp,{cache:'no-store',redirect:'follow'})
+    .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(value=>({ok:true,value}),error=>({ok:false,error}));
+})();
+</script>
+
 </head>
 <body>
 <div class="global-top-shell">
@@ -1762,9 +1777,9 @@ body{
     </div>
   </header>
   <nav class="global-master-nav" aria-label="성과관리 메뉴">
-  <a href="./main_v3.html?v=20260918f">통합현황</a>
-  <a class="active" href="./performance_v3.html?v=20260918f">성과지표 관리</a>
-  <a href="./quantitative_v3.html?v=20260918f">정량실적 관리</a>
+  <a href="./main_v3.html?v=20260923fast1">통합현황</a>
+  <a class="active" href="./performance_v3.html?v=20260923fast1">성과지표 관리</a>
+  <a href="./quantitative_v3.html?v=20260923fast1">정량실적 관리</a>
 </nav>
 </div>
 
@@ -2388,18 +2403,38 @@ function enrichActions(){
   });
 }
 
-async function tryApi(){
+const PERF_FAST_CACHE_KEY='dhc-html-fast-v1:perf';
+function readPerfFastCache(){try{const x=JSON.parse(localStorage.getItem(PERF_FAST_CACHE_KEY)||'null');if(x&&x.payload)return x;const legacy=JSON.parse(localStorage.getItem('dhc-react-v3:perf')||'null');if(legacy&&Array.isArray(legacy.data)&&legacy.data.length)return {savedAt:legacy.savedAt||0,payload:{data:legacy.data,actions:legacy.actions,lastUpdated:legacy.lastUpdated||''}};return null}catch(e){return null}}
+function writePerfFastCache(payload){try{localStorage.setItem(PERF_FAST_CACHE_KEY,JSON.stringify({savedAt:Date.now(),payload}))}catch(e){console.warn('성과지표 LIVE cache 저장 생략',e)}}
+function setCacheState(lastUpdated=''){
+  const live=document.querySelector('.live');
+  live?.classList.add('live-fallback');
+  $('liveText').textContent='저장 데이터 표시 · LIVE 확인 중';
+  const d=formatDashboardDate(lastUpdated);
+  $('updatedText').textContent=d&&d!=='-'?`마지막 정상 데이터 · ${d} · 최신값 확인 중`:'마지막 정상 LIVE 데이터 · 최신값 확인 중';
+}
+
+async function tryApi(force=false){
   const url=currentApiUrl();
   if(!url) throw new Error('API URL 없음');
 
   let lastError=null;
 
   try{
-    const sep=url.includes('?')?'&':'?';
-    const res=await fetch(url+sep+'_='+Date.now(),{cache:'no-store',redirect:'follow'});
-    if(!res.ok) throw new Error('API HTTP '+res.status);
-    const payload=await res.json();
+    let payload;
+    const early=!force?window.__DHC_PERF_PREFETCH__:null;
+    if(early){
+      const prefetched=await early;
+      if(!prefetched?.ok) throw prefetched?.error||new Error('조기 요청 실패');
+      payload=prefetched.value;
+    }else{
+      const sep=url.includes('?')?'&':'?';
+      const res=await fetch(url+sep+'_='+Date.now(),{cache:'no-store',redirect:'follow'});
+      if(!res.ok) throw new Error('API HTTP '+res.status);
+      payload=await res.json();
+    }
     applyLivePayload(payload,'Apps Script API');
+    writePerfFastCache(payload);
     return true;
   }catch(e){
     lastError=e;
@@ -2407,8 +2442,9 @@ async function tryApi(){
   }
 
   try{
-    const payload=await jsonp(url);
+    const payload=await jsonp(url,6500);
     applyLivePayload(payload,'Apps Script API');
+    writePerfFastCache(payload);
     return true;
   }catch(e){
     lastError=e;
@@ -2440,24 +2476,35 @@ function useFallback(){
   setLiveState(false);
 }
 
-async function loadLive(){
-  $('liveText').textContent='Google Sheets 연결 중';
-  $('updatedText').textContent='최신 데이터를 확인하고 있습니다';
-
+async function loadLive(force=false){
+  let cacheApplied=false;
+  if(!force){
+    const cached=readPerfFastCache();
+    if(cached){
+      try{
+        applyLivePayload(cached.payload,'저장된 최신 데이터');
+        setCacheState(cached.payload?.meta?.lastUpdated||cached.payload?.lastUpdated||cached.payload?.updatedAt||'');
+        cacheApplied=true;
+      }catch(e){console.warn('성과지표 저장 캐시 적용 실패',e)}
+    }
+  }
+  if(!cacheApplied){
+    $('liveText').textContent=force?'Google Sheets 새로고침 중':'Google Sheets 연결 중';
+    $('updatedText').textContent='최신 데이터를 확인하고 있습니다';
+  }
   try{
-    await tryApi();
+    await tryApi(force);
     return;
   }catch(e){
     console.error('Apps Script API 실패',e);
   }
-
   try{
     await tryGviz();
     return;
   }catch(e){
     console.error('Google Sheets 직접연결 실패',e);
   }
-
+  if(cacheApplied){setCacheState();return;}
   useFallback();
 }
 // 지표명 커스텀 툴팁: PC는 hover/focus, 모바일은 tap
@@ -2527,7 +2574,7 @@ window.addEventListener('resize',closePinnedMetricTooltip);
 window.addEventListener('scroll',closePinnedMetricTooltip,{passive:true});
 
 ['change'].forEach(evt=>[els.status,els.univ,els.task,els.type,els.sort].forEach(el=>el.addEventListener(evt,render)));
-$('refreshBtn').addEventListener('click',loadLive);
+$('refreshBtn').addEventListener('click',()=>loadLive(true));
 
 initEmblems();
 setOptions();

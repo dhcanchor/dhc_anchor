@@ -1437,6 +1437,27 @@ body{
   @media(max-width:430px){.nav-download-actions{grid-template-columns:1fr}.excel-download-btn{justify-content:flex-start}}
 </style>
 
+
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<link rel="preconnect" href="https://docs.google.com">
+<link rel="dns-prefetch" href="//script.google.com">
+<link rel="dns-prefetch" href="//script.googleusercontent.com">
+<script>
+/* FAST LIVE BOOT: 화면 구조는 그대로 두고 Google 요청만 HTML 파싱과 동시에 시작 */
+(function(){
+  const PERF="https://script.google.com/macros/s/AKfycbyRuwUw4ZOpzCjtgY2jusLkKXfufLdB3nlCKbeO9CO6j_iFZd07RdH5HBEuX42Ob2RR8Q/exec", QUANT="https://script.google.com/macros/s/AKfycbwA2dlMifKGrw0L-wxKuILXHH_1uMn_tLRFdrVPFPIcmb7QcHG03hQHOZjh4F6W3_RFpA/exec";
+  const opts={cache:'no-store',redirect:'follow'};
+  const stamp=Date.now();
+  const settle=p=>p.then(v=>({ok:true,value:v}),error=>({ok:false,error}));
+  window.__DHC_FAST_BOOT__={
+    startedAt:stamp,
+    perfPromise:settle(fetch(PERF+'?_='+stamp,opts).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})),
+    quantPromise:settle(fetch(QUANT+'?view=quantitative&sheet='+encodeURIComponent('정량실적')+'&_='+stamp,opts).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}))
+  };
+})();
+</script>
+
 </head>
 <body>
 <div class="global-top-shell">
@@ -1456,9 +1477,9 @@ body{
   </header>
   <nav class="global-master-nav" aria-label="성과관리 메뉴">
   <div class="nav-menu">
-    <a class="active" href="./main_v3.html?v=20260922b">통합현황</a>
-    <a href="./performance_v3.html?v=20260918f">성과지표 관리</a>
-    <a href="./quantitative_v3.html?v=20260918f">정량실적 관리</a>
+    <a class="active" href="./main_v3.html?v=20260923fast1">통합현황</a>
+    <a href="./performance_v3.html?v=20260923fast1">성과지표 관리</a>
+    <a href="./quantitative_v3.html?v=20260923fast1">정량실적 관리</a>
   </div>
   <div class="nav-download-actions" id="excelDownloads" aria-label="엑셀 다운로드">
     <button type="button" class="excel-download-btn" data-download="department" aria-label="부서관리용 엑셀 다운로드" title="부서관리용 엑셀 다운로드">
@@ -1492,7 +1513,7 @@ body{
             <div class="module-sub">핵심·자율지표 달성현황 및 관리대상 요약</div>
           </div>
         </div>
-        <a class="detail" href="./performance_v3.html?v=20260918f">자세히 보기 →</a>
+        <a class="detail" href="./performance_v3.html?v=20260923fast1">자세히 보기 →</a>
       </div>
 
       <div class="kpis">
@@ -1576,7 +1597,7 @@ body{
             <div class="module-sub">단위과제·대학별 목표 대비 정량실적 현황 <span class="mode-chip" id="qMode">연결 중</span></div>
           </div>
         </div>
-        <a class="detail" href="./quantitative_v3.html?v=20260918f">자세히 보기 →</a>
+        <a class="detail" href="./quantitative_v3.html?v=20260923fast1">자세히 보기 →</a>
       </div>
 
       <div class="kpis">
@@ -1809,6 +1830,24 @@ function renderPerformance(){
     </tr>`).join('');
 }
 
+/* FAST LIVE CACHE: 마지막 정상 응답을 먼저 표시하고 즉시 백그라운드 갱신 */
+const DHC_FAST_CACHE={perf:'dhc-html-fast-v1:perf',quant:'dhc-html-fast-v1:quant'};
+function readLiveCache(key){
+  try{
+    const x=JSON.parse(localStorage.getItem(key)||'null');
+    if(x&&x.payload)return x;
+    const legacyKey=key===DHC_FAST_CACHE.perf?'dhc-react-v3:perf':'dhc-react-v3:quant';
+    const legacy=JSON.parse(localStorage.getItem(legacyKey)||'null');
+    if(legacy&&Array.isArray(legacy.data)&&legacy.data.length){
+      return {savedAt:legacy.savedAt||0,payload:{data:legacy.data,actions:legacy.actions,lastUpdated:legacy.lastUpdated||''}};
+    }
+    return null;
+  }catch(e){return null}
+}
+function writeLiveCache(key,payload){
+  try{localStorage.setItem(key,JSON.stringify({savedAt:Date.now(),payload}))}catch(e){console.warn('LIVE cache 저장 생략',e)}
+}
+
 /* Performance API: fetch -> JSONP -> GViz -> snapshot */
 function jsonp(url,timeout=10000){
   return new Promise((resolve,reject)=>{
@@ -1844,15 +1883,39 @@ function parseGvizIndicators(table){
   }}).filter(x=>/^\d{4}$/.test(x.연도)&&x.단위과제&&x.지표명);
 }
 async function loadPerformance(force=false){
+  let cacheApplied=false;
+  if(!force){
+    const cached=readLiveCache(DHC_FAST_CACHE.perf);
+    if(cached){
+      try{
+        const p=cached.payload;
+        const rows=Array.isArray(p)?p:(p?.data||[]);
+        if(Array.isArray(rows)&&rows.length){
+          PERF=normalizePerformanceRows(rows);
+          sourceState.perf='cache';
+          sourceState.perfUpdated=p?.meta?.lastUpdated||p?.lastUpdated||p?.updatedAt||'';
+          renderPerformance();
+          cacheApplied=true;
+        }
+      }catch(e){console.warn('성과지표 저장 캐시 적용 실패',e)}
+    }
+  }
   const url=PERF_CONFIG.api+(PERF_CONFIG.api.includes('?')?'&':'?')+'_='+Date.now();
   try{
     let payload;
     try{
-      const res=await fetch(url,{cache:'no-store',redirect:'follow'});
-      if(!res.ok) throw new Error('HTTP '+res.status);
-      payload=await res.json();
+      const early=!force?window.__DHC_FAST_BOOT__?.perfPromise:null;
+      if(early){
+        const prefetched=await early;
+        if(!prefetched?.ok) throw prefetched?.error||new Error('조기 요청 실패');
+        payload=prefetched.value;
+      }else{
+        const res=await fetch(url,{cache:'no-store',redirect:'follow'});
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        payload=await res.json();
+      }
     }catch(e){
-      payload=await jsonp(PERF_CONFIG.api);
+      payload=await jsonp(PERF_CONFIG.api,6500);
     }
     if(!payload||payload.ok===false) throw new Error(payload?.error||'API 응답 오류');
     const rows=Array.isArray(payload)?payload:(payload.data||[]);
@@ -1860,14 +1923,18 @@ async function loadPerformance(force=false){
     PERF=normalizePerformanceRows(rows);
     sourceState.perf='live';
     sourceState.perfUpdated=payload?.meta?.lastUpdated||payload?.lastUpdated||payload?.updatedAt||'';
+    writeLiveCache(DHC_FAST_CACHE.perf,payload);
     renderPerformance();return;
   }catch(e){console.warn('성과지표 Apps Script 연결 실패',e)}
   try{
-    const table=await gvizIndicators();
+    const table=await gvizIndicators(6500);
     const rows=parseGvizIndicators(table);
     if(!rows.length) throw new Error('GViz 0건');
-    PERF=rows;sourceState.perf='live';sourceState.perfUpdated='';renderPerformance();return;
+    PERF=rows;sourceState.perf='live';sourceState.perfUpdated='';
+    writeLiveCache(DHC_FAST_CACHE.perf,{data:rows,lastUpdated:''});
+    renderPerformance();return;
   }catch(e){console.warn('성과지표 GViz 연결 실패',e)}
+  if(cacheApplied){sourceState.perf='cache';renderPerformance();return;}
   PERF=[...PERF_SNAPSHOT];sourceState.perf='snapshot';sourceState.perfUpdated='';renderPerformance();
 }
 
@@ -2041,22 +2108,48 @@ function renderQuant(){
     </tr>`;
   }).join('');
 
-  $('qMode').textContent=sourceState.quant==='live'?'LIVE':'화면 예시';
+  $('qMode').textContent=sourceState.quant==='live'?'LIVE':(sourceState.quant==='cache'?'저장 LIVE':'화면 예시');
 }
 async function loadQuant(force=false){
+  let cacheApplied=false;
+  if(!force){
+    const cached=readLiveCache(DHC_FAST_CACHE.quant);
+    if(cached){
+      try{
+        const p=cached.payload;
+        const raw=extractQuant(p);
+        const normalized=raw.map(normalizeQuant).filter(r=>r.target!==null&&r.target>0&&r.execution);
+        if(normalized.length){
+          QUANT=normalized;sourceState.quant='cache';
+          sourceState.quantUpdated=p?.meta?.lastUpdated||p?.lastUpdated||p?.updatedAt||normalized.map(x=>x.date).filter(Boolean).sort().slice(-1)[0]||'';
+          renderQuant();cacheApplied=true;
+        }
+      }catch(e){console.warn('정량실적 저장 캐시 적용 실패',e)}
+    }
+  }
   try{
-    const sep=QUANT_CONFIG.query.includes('?')?'&':'?';
-    const res=await fetch(QUANT_CONFIG.api+QUANT_CONFIG.query+(force?sep+'_='+Date.now():''),{cache:'no-store',redirect:'follow'});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const payload=await res.json();
+    let payload;
+    const early=!force?window.__DHC_FAST_BOOT__?.quantPromise:null;
+    if(early){
+      const prefetched=await early;
+      if(!prefetched?.ok) throw prefetched?.error||new Error('조기 요청 실패');
+      payload=prefetched.value;
+    }else{
+      const sep=QUANT_CONFIG.query.includes('?')?'&':'?';
+      const res=await fetch(QUANT_CONFIG.api+QUANT_CONFIG.query+sep+'_='+Date.now(),{cache:'no-store',redirect:'follow'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      payload=await res.json();
+    }
     const raw=extractQuant(payload);
     const normalized=raw.map(normalizeQuant).filter(r=>r.target!==null&&r.target>0&&r.execution);
     if(!normalized.length) throw new Error('정량실적 데이터 0건');
     QUANT=normalized;sourceState.quant='live';
     sourceState.quantUpdated=payload?.meta?.lastUpdated||payload?.lastUpdated||payload?.updatedAt||normalized.map(x=>x.date).filter(Boolean).sort().slice(-1)[0]||'';
+    writeLiveCache(DHC_FAST_CACHE.quant,payload);
     renderQuant();return;
   }catch(e){
     console.warn('정량실적 API 연결 실패',e);
+    if(cacheApplied){sourceState.quant='cache';renderQuant();return;}
     QUANT=[...QUANT_SAMPLE].map(normalizeQuant).filter(r=>r.target!==null&&r.target>0&&r.execution);
     sourceState.quant='sample';sourceState.quantUpdated='';
     renderQuant();
@@ -2065,11 +2158,14 @@ async function loadQuant(force=false){
 
 function updateHeader(){
   const perfLive=sourceState.perf==='live', quantLive=sourceState.quant==='live';
+  const hasCache=sourceState.perf==='cache'||sourceState.quant==='cache';
   const text=$('liveText');
   if(perfLive&&quantLive){
     text.textContent='Google Sheets LIVE 연동';
   }else if(perfLive||quantLive){
-    text.textContent='일부 데이터 LIVE';
+    text.textContent=hasCache?'저장 데이터 표시 · LIVE 확인 중':'일부 데이터 LIVE';
+  }else if(hasCache){
+    text.textContent='저장 데이터 표시 · LIVE 확인 중';
   }else{
     text.textContent='Google Sheets 연결 확인 필요';
   }
@@ -2077,13 +2173,16 @@ function updateHeader(){
   $('updatedText').textContent=dates.length
     ? '최종 데이터 기준 · '+dates.sort().slice(-1)[0]
     : (perfLive&&quantLive ? '성과지표 · 정량실적 실시간 연동'
+      : (hasCache ? '마지막 정상 LIVE 데이터 표시 · 최신값 확인 중'
       : (perfLive||quantLive ? '일부 데이터만 실시간 연동 중'
-      : '연결 실패 시 Snapshot/화면예시 데이터 표시'));
+      : '연결 실패 시 Snapshot/화면예시 데이터 표시')));
 }
 
 async function loadAll(force=false){
-  $('liveText').textContent='Google Sheets 연결 중';
-  await Promise.allSettled([loadPerformance(force),loadQuant(force)]);
+  $('liveText').textContent=force?'Google Sheets 새로고침 중':'Google Sheets 연결 중';
+  const jobs=[loadPerformance(force),loadQuant(force)];
+  updateHeader();
+  await Promise.allSettled(jobs);
   updateHeader();
 }
 
