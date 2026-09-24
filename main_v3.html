@@ -2318,6 +2318,54 @@ function quantTaskNameForExport(r){
   if(rawName && !nameLooksLikeCode && normalizedName!==task) return rawName;
   return QUANT_TASK_NAME_MAP[task] || rawName || '';
 }
+
+const TP_INCLUDED_TASKS=new Set(['1-1','2-2','2-3','3-2','3-3','3-4','3-5','4-3','4-4','4-5']);
+const TP_TASK_NAME_MAP={
+  '1-1':'지역기반 보건의료 혁신 인재양성',
+  '2-2':'지역정주형 산학협력 인재양성',
+  '2-3':'지역맞춤형 보건인재 취·창업 지원',
+  '3-2':'지역기업 성장 및 사업화 지원',
+  '3-3':'지역 전통산업 고도화 지원',
+  '3-4':'지역산업 혁신 지원',
+  '3-5':'지역창업 생태계 활성화',
+  '4-3':'외국인 정주·성장 지원',
+  '4-4':'평생직업교육 활성화',
+  '4-5':'지역사회 보건서비스 확대'
+};
+const TP_CIRCLED_DIGITS={'1':'①','2':'②','3':'③','4':'④','5':'⑤','6':'⑥','7':'⑦','8':'⑧','9':'⑨','10':'⑩'};
+const TP_UNIVERSITY_KEYS={'대구보건':'대구','계명':'계대','영진':'영진','대구과학':'과학','진흥원':'진흥'};
+const TP_TARGETS={"1-1|대학별 혁신계획 수립(대학별 1:1 대응 투자)":[["대구보건",1]],"1-1|산학 및 학연 JA 교수제 운영":[["대구보건",10]],"1-1|우수 학생 표준형 현장실습 지원":[["대구보건",20]],"1-1|융합형 캡스톤 디자인":[["대구보건",11]],"1-1|학생 주도 대학간 협업 지역 기업 프로젝트랩 운영":[["대구보건",7]],"2-2|D5 대학원 특화 전공(학부, 학부 등 포함) 운영":[["대구보건",1]],"2-2|* D5 산업 특화 전공별 석박사 과정 25명 이상 포함":[["대구보건",13]],"2-2|협업 기업 재직자 교육 프로그램 운영":[["대구보건",7]],"2-2|특화 전공 기업-대학원생 협업 프로젝트 운영":[["대구보건",2]],"2-2|특화 전공 주도 대학원생 융합연구모임 활동 지원":[["대구보건",1]],"2-2|대학원생 지역 대학 연구원 취업 지원":[["대구보건",2]],"2-2|학연 협업 위촉 연구원 활동 지원":[["대구보건",2]],"2-3|D5 앵커기업 맞춤인재 양성 사업팀 운영":[["대구보건",7],["계명",3]],"2-3|코디네이터 운영":[["대구보건",1]],"2-3|시설 및 인프라 고도화":[["대구보건",2]],"2-3|현장 맞춤 교육 장비 구축":[["대구보건",2]],"2-3|주문식 교육과정 운영":[["대구보건",55],["계명",20]],"2-3|모듈형 교육과정 운영(전문대 마이크로 디그리)":[["대구보건",60],["계명",20]],"2-3|기업 연계 PBL 프로그램 운영":[["대구보건",2],["계명",1]],"2-3|* 협약 기업이 반드시 참여":[["대구보건",2],["계명",1]],"2-3|인턴쉽 등 현장 적응력 강화 프로그램 운영":[["대구보건",1],["계명",2]],"2-3|특성과고 연계 및 졸업자 지원":[["대구보건",3]],"3-2|현장캠퍼스 시설ㆍ장비 고도화":[["대구보건",2000]],"3-2|현장캠퍼스 시설ㆍ장비 운영(전기료, 공공요금 등)":[["대구보건",1]],"3-2|현장캠퍼스 상주 인력 운영(인건비 50% 이상 대응 투자)":[["대구보건",6]],"3-2|현장 맞춤 개발 지원 프로젝트":[["대구보건",20]],"3-2|현장캠퍼스 장비/시설 활용 개발 지원":[["대구보건",80]],"3-2|기업집적지별 협업 커뮤니티 운영":[["대구보건",7]],"3-3|연고산업 실무인재 양성(전문대)":[["대구보건",30],["영진",15],["대구과학",15]],"3-3|연고산업 재직자 레벨업 교육":[["대구보건",30],["영진",20],["대구과학",20],["진흥원",50]],"3-3|수요 미스매치 기술 분야 특화인재 양성(미취업자 등)":[["대구보건",30],["영진",20],["대구과학",10]],"3-3|재직자 디지털 전환 교육":[["대구보건",20],["영진",15],["대구과학",15]],"3-3|디지털 전환 애로해결 패키지 지원":[["대구보건",2],["영진",2],["대구과학",2]],"3-3|특화기업 시장 진출 지원":[["대구보건",3],["영진",1],["대구과학",1]],"3-3|글로벌 시장 개척 지원(기업 25% 이상 대응 투자)":[["대구보건",2]],"3-4|대학별 창업 교육 활성화 지원":[["대구보건",3],["영진",1]],"3-4|대학 창업지원전문인력 지원 (인건비 등)":[["대구보건",2],["영진",1]],"3-4|창업지원전문가 양성 지원(교육참가 지원)":[["대구보건",3]],"3-4|창업보육공간 및 시설 고도화 지원":[["대구보건",1]],"3-4|대학 기반 아이디어 시제품제작센터 운영":[["대구보건",1],["영진",1]],"3-4|대학 (예비)창업기업 지원":[["대구보건",5],["영진",1]],"3-4|대학-창업기업 잡 매칭 지원":[["대구보건",1],["영진",1]],"3-5|산단별 특화형 창업거점 고도화":[["대구보건",1]],"3-5|특화형 창업거점 상주 대학 창업매니저 인건비 지원":[["대구보건",2]],"3-5|특화형 창업거점 운영":[["대구보건",1]],"3-5|첨단기술 기반 바이오의료 창업 패키지 지원(첨복단지 연계)":[["대구보건",10]],"3-5|고경력 재직자/스핀오프 창업 기획 지원":[["대구보건",1]],"3-5|고급인재(석박사급, 고경력자) 기술창업 기획 지원":[["대구보건",1]],"3-5|대학 기술 이전 연계 딥테크 창업 기획 지원":[["대구보건",1]],"4-3|유학생 및 가족 한국어 교육 지원":[["대구보건",1]],"4-3|유학생 맞춤 교육과정 개발 및 운영":[["대구보건",2]],"4-3|유학생-기업 매칭 특화 교육과정 운영":[["대구보건",2]],"4-3|유학생 및 가족 취창업 교육 프로그램 운영":[["대구보건",1]],"4-3|유학생 유치-정착 패키지 지원":[["대구보건",1]],"4-4|취미-창업 연계 지원 프로그램 운영":[["대구보건",7]],"4-4|취창업 준비 평생 교육 과정":[["대구보건",9]],"4-4|교양 중심 평생 교육 과정":[["대구보건",4]],"4-4|디지털 역량 강화 평생 교육 과정":[["대구보건",6]],"4-5|구ㆍ군 수요 맞춤 문제해결 프로젝트 수행":[["대구보건",6]],"4-5|대학-주민 커뮤니티 실험실 운영":[["대구보건",2]],"4-5|사회변화 대응력 강화 교육(디지털 리터러시 등)":[["대구보건",1]],"4-5|장애인 등 사회적 약자 지원":[["대구보건",1]],"4-5|느린 학습자 등 교육취약계층 지원":[["대구보건",1]],"4-5|디지털 소외 극복 프로그램 운영":[["대구보건",1]],"4-5|사회적 가치 중심 제품/솔루션 협업 사업화 지원":[["대구보건",1]]};
+
+function tpCanonicalTask(value){
+  return normalizeQuantTaskCodeForExport(value).replace(/\((?:경대|경북대|영진|계명)\)$/,'');
+}
+function tpIncludedTask(value){ return TP_INCLUDED_TASKS.has(tpCanonicalTask(value)); }
+function tpExportPerfRows(){ return exportPerfRows().filter(r=>tpIncludedTask(r.단위과제)); }
+function tpExportQuantRows(){ return exportQuantRows().filter(r=>tpIncludedTask(r.task)); }
+function tpTaskNameForExport(r){
+  const task=tpCanonicalTask(r?.task);
+  return TP_TASK_NAME_MAP[task] || quantTaskNameForExport(r);
+}
+function tpTaskCodeForExport(value){
+  const task=tpCanonicalTask(value);
+  const m=task.match(/^(\d+)-(\d+)$/);
+  if(!m) return task;
+  return m[1]+'-'+(TP_CIRCLED_DIGITS[m[2]]||m[2]);
+}
+function tpUniversityBreakdown(r){
+  const task=tpCanonicalTask(r?.task);
+  const key=task+'|'+String(r?.execution||'').trim();
+  const defs=TP_TARGETS[key];
+  if(!Array.isArray(defs)||!defs.length) return universityBreakdown(r);
+  return defs.map(([label,target])=>{
+    const ukey=TP_UNIVERSITY_KEYS[label];
+    const entered=ukey ? r?.universityEntered?.[ukey]===true : false;
+    const actual=entered ? r?.universityActuals?.[ukey] : null;
+    const av=(actual===null||actual===undefined||actual==='')?'-':Number(actual).toLocaleString('ko-KR',{maximumFractionDigits:2});
+    const tv=Number(target).toLocaleString('ko-KR',{maximumFractionDigits:2});
+    return `${label} ${av}/${tv}`;
+  }).join(', ');
+}
 function universityBreakdown(r){
   return QUANT_CONFIG.universities.map(u=>{
     const t=quantUniversityTarget(r,u);
@@ -2490,35 +2538,39 @@ function addDepartmentQuantSheet(wb){
   ws.getColumn(7).numFmt='0.0"%"';
   return ws;
 }
+
 function addTPPerformanceSheet(wb){
   const ws=wb.addWorksheet('핵심·자율지표',{properties:{tabColor:{argb:'FFB40059'}}});
-  const headers=['단위과제','구분','지표명','단위','2차년도 성과목표','실적값','목표달성도'];
-  setupSheet(ws,[13,13,45,9,16,14,14],5,3);
+  const headers=['단위과제','대학','구분','지표명','단위','2차년도 목푯값','실적값','달성률','상태'];
+  setupSheet(ws,[13,16,13,45,9,16,14,12,10],5,3);
   addSheetHeading(ws,'2차년도 핵심·자율지표 실적표',`대구테크노파크 제출형 참고 서식 · 생성 ${exportTimestamp()}`,headers.length);
   setHeaders(ws,5,headers,'FFB40059');
-  const rows=exportPerfRows(); let prev='';
+  const rows=tpExportPerfRows();
   rows.forEach((r,i)=>{
-    const task=r.단위과제===prev?'':r.단위과제; prev=r.단위과제;
     const rate=excelPercentTextNumber(r.달성률);
     const row=ws.getRow(6+i);
-    row.values=[task,r.구분,r.지표명,r.단위,excelNumber(r.목표),excelNumber(r.실적),rate];
+    row.values=[r.단위과제,r.대학,r.구분,r.지표명,r.단위,excelNumber(r.목표),excelNumber(r.실적),rate,statusOf(rate)];
   });
   styleDataRows(ws,6,5+rows.length,headers.length);
-  rows.forEach((r,i)=>{const rate=excelPercentTextNumber(r.달성률);if(rate!=='') styleRateCell(ws.getRow(6+i).getCell(7),rate);});
-  ws.getColumn(5).numFmt='#,##0.00';ws.getColumn(6).numFmt='#,##0.00';ws.getColumn(7).numFmt='0.0"%"';
+  rows.forEach((r,i)=>{
+    const rate=excelPercentTextNumber(r.달성률);
+    if(rate!=='') styleRateCell(ws.getRow(6+i).getCell(8),rate);
+    styleStatusCell(ws.getRow(6+i).getCell(9),statusOf(rate));
+  });
+  ws.getColumn(6).numFmt='#,##0.00';ws.getColumn(7).numFmt='#,##0.00';ws.getColumn(8).numFmt='0.0"%"';
   return ws;
 }
 function addTPQuantSheet(wb){
   const ws=wb.addWorksheet('정량실적',{properties:{tabColor:{argb:'FF0F2747'}}});
-  const headers=['단위과제','단위과제명','실행내용','RFP 전체 실적','2차년도 정량목표','실적값','목표달성도','대학별 목표/실적'];
+  const headers=['단위과제','단위과제명','실행내용','세부실적','2차년도 목푯값','실적값','달성률','대학별 실적/목표'];
   setupSheet(ws,[13,30,38,38,17,14,14,42],5,2);
-  addSheetHeading(ws,'2차년도 정량실적 실적표',`대구테크노파크 제출형 참고 서식 · 컨소시엄은 대학별 실적 병기 · 생성 ${exportTimestamp()}`,headers.length);
+  addSheetHeading(ws,'2차년도 정량실적 실적표',`대구테크노파크 제출형 참고 서식 · 컨소시엄은 대학별 실적/목표 병기 · 생성 ${exportTimestamp()}`,headers.length);
   setHeaders(ws,5,headers,'FF0F2747');
-  const rows=exportQuantRows();
+  const rows=tpExportQuantRows();
   rows.forEach((r,i)=>{
     const rate=quantRate(r);
     const row=ws.getRow(6+i);
-    row.values=[r.task,quantTaskNameForExport(r),r.execution,r.detail,excelNumber(r.target),r.actualEntered?excelNumber(r.actual):'',rate,universityBreakdown(r)];
+    row.values=[tpTaskCodeForExport(r.task),tpTaskNameForExport(r),r.execution,r.detail,excelNumber(r.target),r.actualEntered?excelNumber(r.actual):'',rate,tpUniversityBreakdown(r)];
   });
   styleDataRows(ws,6,5+rows.length,headers.length);
   rows.forEach((r,i)=>styleRateCell(ws.getRow(6+i).getCell(7),quantRate(r)));
