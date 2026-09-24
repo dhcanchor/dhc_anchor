@@ -2510,21 +2510,19 @@ function addTPPerformanceSheet(wb){
 }
 function addTPQuantSheet(wb){
   const ws=wb.addWorksheet('정량실적',{properties:{tabColor:{argb:'FF0F2747'}}});
-  const headers=['단위과제명','실행내용','RFP 전체 실적','2차년도 정량목표','실적값','목표달성도','대학별 목표/실적'];
-  setupSheet(ws,[30,38,38,17,14,14,42],5,2);
+  const headers=['단위과제','단위과제명','실행내용','RFP 전체 실적','2차년도 정량목표','실적값','목표달성도','대학별 목표/실적'];
+  setupSheet(ws,[13,30,38,38,17,14,14,42],5,2);
   addSheetHeading(ws,'2차년도 정량실적 실적표',`대구테크노파크 제출형 참고 서식 · 컨소시엄은 대학별 실적 병기 · 생성 ${exportTimestamp()}`,headers.length);
   setHeaders(ws,5,headers,'FF0F2747');
-  const rows=exportQuantRows(); let prev='';
+  const rows=exportQuantRows();
   rows.forEach((r,i)=>{
-    const task=r.task===prev?'':r.task; prev=r.task;
     const rate=quantRate(r);
-    const project=[task,quantTaskNameForExport(r)].filter(Boolean).join(' ');
     const row=ws.getRow(6+i);
-    row.values=[project,r.execution,r.detail,excelNumber(r.target),r.actualEntered?excelNumber(r.actual):'',rate,universityBreakdown(r)];
+    row.values=[r.task,quantTaskNameForExport(r),r.execution,r.detail,excelNumber(r.target),r.actualEntered?excelNumber(r.actual):'',rate,universityBreakdown(r)];
   });
   styleDataRows(ws,6,5+rows.length,headers.length);
-  rows.forEach((r,i)=>styleRateCell(ws.getRow(6+i).getCell(6),quantRate(r)));
-  ws.getColumn(4).numFmt='#,##0.00';ws.getColumn(5).numFmt='#,##0.00';ws.getColumn(6).numFmt='0.0"%"';
+  rows.forEach((r,i)=>styleRateCell(ws.getRow(6+i).getCell(7),quantRate(r)));
+  ws.getColumn(5).numFmt='#,##0.00';ws.getColumn(6).numFmt='#,##0.00';ws.getColumn(7).numFmt='0.0"%"';
   return ws;
 }
 async function saveWorkbook(wb,filename){
