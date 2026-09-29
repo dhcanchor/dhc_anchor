@@ -1929,7 +1929,7 @@ body{
           <rect x="14" y="33" width="5" height="5" rx="1" fill="white"/>
         </svg>
       </div>
-      <div><small>데이터 기준일</small><b id="kDate" style="font-size:22px">-</b><div class="sub">최종 데이터 수정 기준</div></div>
+      <div><small>데이터 기준일</small><b id="kDate" style="font-size:22px">-</b><div class="sub">LIVE 데이터 변경 감지 기준</div></div>
     </article>
   </section>
 
@@ -2228,6 +2228,74 @@ function formatDashboardDate(value){
   return m ? `${Number(m[1])}.${Number(m[2])}.${Number(m[3])}` : String(value);
 }
 
+/*
+ * 데이터 기준일 자동 갱신
+ * - Apps Script의 meta.lastUpdated 값이 갱신되지 않는 경우에도
+ *   실제 성과지표 데이터 내용이 바뀌면 오늘 날짜를 새 기준일로 저장한다.
+ * - 데이터 내용이 동일하면 페이지 재접속/새로고침만으로 기준일이 바뀌지 않는다.
+ */
+const PERF_DATA_FINGERPRINT_KEY='dhc-performance:data-fingerprint:v2';
+const PERF_DATA_REFERENCE_DATE_KEY='dhc-performance:data-reference-date:v2';
+
+function performancePayloadFingerprint(payload){
+  const rows=Array.isArray(payload)?payload:(Array.isArray(payload?.data)?payload.data:[]);
+  const actions=Array.isArray(payload?.actions)?payload.actions:[];
+  const normalized={
+    data:rows.map(x=>[
+      x?.연도??x?.year??'', x?.대학??x?.대학구분??'', x?.단위과제??'',
+      x?.구분??x?.지표구분??'', x?.지표명??'', x?.목표??x?.목푯값??'',
+      x?.실적??x?.달성값??'', x?.달성률??'', x?.비고??''
+    ]),
+    actions:actions.map(x=>[
+      x?.단위과제??'', x?.구분??x?.지표구분??'', x?.지표명??'',
+      x?.조치환류??x?.['조치·환류']??'', x?.조치입력일??'', x?.관리상태??''
+    ])
+  };
+  const s=JSON.stringify(normalized);
+  let h=2166136261;
+  for(let i=0;i<s.length;i++){
+    h^=s.charCodeAt(i);
+    h=Math.imul(h,16777619);
+  }
+  return (h>>>0).toString(36)+'-'+s.length;
+}
+
+function resolvePerformanceReferenceDate(payload){
+  const fingerprint=performancePayloadFingerprint(payload);
+  const serverDate=payload?.meta?.lastUpdated||payload?.lastUpdated||payload?.updatedAt||'';
+  const nowIso=new Date().toISOString();
+  try{
+    const prevFingerprint=localStorage.getItem(PERF_DATA_FINGERPRINT_KEY)||'';
+    let storedDate=localStorage.getItem(PERF_DATA_REFERENCE_DATE_KEY)||'';
+
+    // 새 코드 최초 적용 시에는 현재 LIVE 데이터가 반영된 오늘을 기준일로 기록
+    if(!prevFingerprint){
+      storedDate=nowIso;
+      localStorage.setItem(PERF_DATA_FINGERPRINT_KEY,fingerprint);
+      localStorage.setItem(PERF_DATA_REFERENCE_DATE_KEY,storedDate);
+      return storedDate;
+    }
+
+    // 실적/달성률/조치·환류 등 실제 데이터가 바뀐 경우에만 기준일 갱신
+    if(prevFingerprint!==fingerprint){
+      storedDate=nowIso;
+      localStorage.setItem(PERF_DATA_FINGERPRINT_KEY,fingerprint);
+      localStorage.setItem(PERF_DATA_REFERENCE_DATE_KEY,storedDate);
+      return storedDate;
+    }
+
+    if(storedDate) return storedDate;
+
+    // 저장값이 없을 때만 API 기준일을 보조값으로 사용
+    storedDate=serverDate||nowIso;
+    localStorage.setItem(PERF_DATA_REFERENCE_DATE_KEY,storedDate);
+    return storedDate;
+  }catch(e){
+    // localStorage 사용이 제한된 환경에서는 LIVE 응답 시점을 기준으로 표시
+    return nowIso;
+  }
+}
+
 function parseBaseDate(){
   const t=($('kDate')?.textContent||'').trim();
   const m=t.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
@@ -2325,11 +2393,11 @@ function applyLivePayload(json, sourceLabel='Apps Script API'){
     비고:x.비고??''
   }));
   ACTIONS=Array.isArray(json.actions)?json.actions:[];
-  const lastUpdated=json?.meta?.lastUpdated||json?.lastUpdated||json?.updatedAt||'';
-  if($('kDate')) $('kDate').textContent=formatDashboardDate(lastUpdated);
+  const referenceDate=resolvePerformanceReferenceDate(json);
+  if($('kDate')) $('kDate').textContent=formatDashboardDate(referenceDate);
   enrichActions();
   setOptions(); render();
-  setLiveState(true, sourceLabel, lastUpdated);
+  setLiveState(true, sourceLabel, referenceDate);
 }
 
 const SHEET_ID='1z9P3FhqlhGOUHMCkBFfPmQA-oJhQu1uJpkoI6gI9ZsE';
@@ -2537,9 +2605,11 @@ async function tryGviz(){
   if(!rows.length) throw new Error('GViz 지표 데이터 0건');
   DATA=rows;
   ACTIONS=parseActionTable(act,rows);
+  const referenceDate=resolvePerformanceReferenceDate({data:DATA,actions:ACTIONS});
+  if($('kDate')) $('kDate').textContent=formatDashboardDate(referenceDate);
   enrichActions();
   setOptions(); render();
-  setLiveState(true,'Google Sheets 직접연결');
+  setLiveState(true,'Google Sheets 직접연결',referenceDate);
   return true;
 }
 
